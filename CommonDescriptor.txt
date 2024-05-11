@@ -12,6 +12,28 @@
 # JUnit
 	"src\test\resources\application.properties"
 	
+# COMANDOS SONARQUBE
+
+	# Installing the SonarQube server from the ZIP file
+	
+		# Edit <sonarqubeHome>/conf/sonar.properties to configure the database settings.
+		
+			sonar.jdbc.username=postgres
+			sonar.jdbc.password=postgres
+			sonar.jdbc.url=jdbc:postgresql://localhost:5432/sonarqube		
+			
+		# Adjust the Java executable path (Não necessário)
+			setx SONAR_JAVA_PATH "C:\Program Files\java_home\bin\java.exe"
+			
+		# Start the web server (Falhou no JDK 21)
+		
+			"You can now browse SonarQube at http://localhost:9000 (the default system administrator credentials are admin/admin)."
+			<sonarqubeHome>/bin/windows-x86-64/StartSonar.bat
+			
+		# Usando o JDK 17
+			jdk-17.0.11\bin\java.exe -jar <sonarqubeHome>\lib\sonar-application-9.9.5.90363.jar
+		
+	
 # COMANDOS DEV
 
 	mvnw quarkus:list-extensions
