@@ -49,7 +49,6 @@ If you want to learn more about building native executables, please consult http
 
 ## Related Guides
 
-- Web Bundler ([guide](https://docs.quarkiverse.io/quarkus-web-bundler/dev/)): Creating full-stack Web Apps is fast and simple with this extension. Zero config bundling for your web-app scripts (js, jsx, ts, tsx), dependencies (jquery, react, htmx, ...) and styles (css, scss, sass).
 - Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplify your persistence code for Hibernate ORM via the active record or the repository pattern
 - JDBC Driver - PostgreSQL ([guide](https://quarkus.io/guides/datasource)): Connect to the PostgreSQL database via JDBC
 
@@ -69,10 +68,3 @@ Create your first JPA entity
 Easily start your RESTful Web Services
 
 [Related guide section...](https://quarkus.io/guides/getting-started#the-jax-rs-resources)
-
-### Web Bundler
-
-This is a tiny app web-bundler.html to get started with the Web Bundler.
-
-[Related guide section...](https://docs.quarkiverse.io/quarkus-web-bundler/dev/)
-

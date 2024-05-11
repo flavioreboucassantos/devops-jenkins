@@ -41,6 +41,3 @@ nb-configuration.xml
 
 # Plugin directory
 /.quarkus/cli/plugins/
-
-# Web Bundler
-node_modules/

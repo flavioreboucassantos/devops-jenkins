@@ -1,0 +1,18 @@
+# AMBIENTE
+
+	# Serving static resources
+	
+		"From the application jar: To serve static resources from the application jar, you must place them in the META-INF/resources directory of your application.
+		This location was chosen as it is the standard location for resources in jar files as defined by the Servlet spec.
+		Even though Quarkus can be used without Servlet, following this convention allows existing code that places its resources in this location to function correctly."
+		Example: src\main\resources\META-INF\resources\index.html
+
+# COMANDOS DEV
+
+	mvnw quarkus:add-extension -Dextensions="hibernate-orm-panache,jdbc-postgresql,resteasy-jackson"
+
+# DOCKER
+
+	mvnw clean package -DskipTests
+	docker build -f src/main/docker/Dockerfile.jvm -t quarkus/tasks-jvm .
+	docker run -i --rm -p 8080:8080 quarkus/tasks-jvm
