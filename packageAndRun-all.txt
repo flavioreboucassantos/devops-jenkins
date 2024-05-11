@@ -1,2 +1,3 @@
 # tasks
 	mvn clean package -f tasks
+	java -jar tasks\target\quarkus-app\quarkus-run.jar
