@@ -7,7 +7,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 
 @Path("")
-public class ControllerRedirect {
+public final class ControllerRedirect {
 
 	final Response responseStaticContent = Response.temporaryRedirect(URI.create("/")).build();
 

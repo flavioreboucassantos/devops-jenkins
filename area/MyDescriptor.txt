@@ -9,7 +9,7 @@
 
 # COMANDOS DEV
 
-	mvnw quarkus:add-extension -Dextensions="hibernate-orm-panache,jdbc-postgresql,resteasy-jackson"
+	mvnw quarkus:add-extension -Dextensions="hibernate-orm-panache,jdbc-postgresql,rest-jackson"
 
 # DOCKER
 
