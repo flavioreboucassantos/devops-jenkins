@@ -1,5 +1,7 @@
 package com.br.flavioreboucassantos.devops.controller;
 
+import java.util.function.Consumer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,12 +9,15 @@ import com.br.flavioreboucassantos.devops.dto.DtoArea;
 import com.br.flavioreboucassantos.devops.entity.EntityArea;
 import com.br.flavioreboucassantos.devops.service.ServiceArea;
 import com.br.flavioreboucassantos.devops.service.TryResultPersist;
+import com.br.flavioreboucassantos.devops.service.TryResultUpdate;
 
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -36,39 +41,79 @@ public final class ControllerArea extends ControllerBase {
 	@POST
 	public Response createArea(final DtoArea dtoArea) {
 
-		LOG.info("--- Entrando Create Area ---");
+		LOG.info("--- Entrando createArea ---");
 
+		/*
+		 * tryPersist
+		 */
 		TryResultPersist<EntityArea> tryResultPersist;
-
-		if ((tryResultPersist = serviceArea.tryPersist(dtoArea)).persistedEntity() == null)
-			return disappointedPersist().entity("createArea-NOT_MODIFIED").build();
+		if ((tryResultPersist = serviceArea.tryPersist(new EntityArea(dtoArea))).persistedEntity() == null)
+			return disappointedPersist().build();
 
 		return Response.status(Response.Status.CREATED).entity(tryResultPersist.persistedEntity()).build();
 	}
 
 	@DELETE
 	@Path("/{id}")
+	@Transactional
 	public Response removeArea(final @PathParam("id") long idArea) {
 
-		LOG.info("--- Entrando Remove Area ---");
+		LOG.info("--- Entrando removeArea: {} ---", idArea);
 
-		if (serviceArea.tryDelete(idArea))
+		/*
+		 * deleteById
+		 */
+		if (serviceArea.deleteById(idArea))
 			return Response.ok().build();
 		else
 			return disappointedFind().entity("removeArea-id-NOT_FOUND").build();
 	}
-	
+
 	@GET
 	@Path("/{id}")
-	public Response findArea(final @PathParam("id") long idArea) {
+	public Response findByIdArea(final @PathParam("id") long idArea) {
 
-		LOG.info("--- Entrando Find Area ---");
+		LOG.info("--- Entrando findByIdArea: {} ---", idArea);
 
+		/*
+		 * findById
+		 */
 		EntityArea entityArea;
-		if ((entityArea = serviceArea.tryFindById(idArea)) == null)
-			return disappointedFind().entity("findArea-id-NOT_FOUND").build();
+		if ((entityArea = serviceArea.findById(idArea)) == null)
+			return disappointedFind().entity("findByIdArea-id-NOT_FOUND").build();
 
 		return Response.ok(entityArea).build();
+	}
+
+	@PUT
+	@Path("/{id}")
+	public Response updateByIdArea(final @PathParam("id") long idArea, final DtoArea dtoArea) {
+
+		LOG.info("--- Entrando updateByIdArea: {} ---", idArea);
+
+		final Consumer<EntityArea> consumerEdit = (final EntityArea entityArea) -> {
+			entityArea.rawData = dtoArea.rawData();
+			entityArea.uniqueData = dtoArea.uniqueData();
+			entityArea.highlighted = dtoArea.highlighted();
+		};
+
+		TryResultUpdate<EntityArea> tryResultUpdate = serviceArea.tryUpdate(idArea, consumerEdit);
+		if (tryResultUpdate.notFound())
+			return disappointedFind().entity("updateByIdArea-id-NOT_FOUND").build();
+
+		if (tryResultUpdate.updatedEntity() == null)
+			return disappointedUpdate().build();
+
+		return Response.ok(tryResultUpdate.updatedEntity()).build();
+	}
+
+	@GET
+	@Path("/all")
+	public Response findAllArea() {
+
+		LOG.info("--- Entrando findAllArea ---");
+
+		return Response.ok(EntityArea.findAll().list()).build();
 	}
 
 }

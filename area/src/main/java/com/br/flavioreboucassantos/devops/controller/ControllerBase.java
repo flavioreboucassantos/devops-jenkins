@@ -36,4 +36,12 @@ public abstract class ControllerBase {
 		return Response.status(Response.Status.FORBIDDEN);
 	}
 
+	/**
+	 * 
+	 * @return Response.ResponseBuilder with Response.Status.NOT_MODIFIED
+	 */
+	public Response.ResponseBuilder disappointedUpdate() {
+		return Response.status(Response.Status.NOT_MODIFIED);
+	}
+
 }
