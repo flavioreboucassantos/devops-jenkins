@@ -108,7 +108,7 @@ public final class ControllerArea extends ControllerBase {
 	}
 
 	@GET
-	@Path("/all")
+	@Path("/")
 	public Response findAllArea() {
 
 		LOG.info("--- Entrando findAllArea ---");
