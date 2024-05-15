@@ -22,7 +22,7 @@ public final class RouteStaticResource {
 	public RouteStaticResource() throws IOException {
 		fileContent = Files.readString(path);
 	}
-	
+
 	/*
 	 * Only working for inclusions: regex not negating.
 	 */
@@ -38,13 +38,8 @@ public final class RouteStaticResource {
 		ex.ok(fileContent);
 	}
 
-	@Route(path = "/form", methods = Route.HttpMethod.GET, produces = "text/html")
+	@Route(path = "/form*", methods = Route.HttpMethod.GET, produces = "text/html")
 	public final void pathForm(final RoutingExchange ex) throws IOException {
-		ex.ok(fileContent);
-	}
-
-	@Route(path = "/form/:n", methods = Route.HttpMethod.GET, produces = "text/html")
-	public final void pathParamForm(final RoutingExchange ex) throws IOException {
 		ex.ok(fileContent);
 	}
 
