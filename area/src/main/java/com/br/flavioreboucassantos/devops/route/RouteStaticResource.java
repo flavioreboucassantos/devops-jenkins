@@ -37,9 +37,14 @@ public final class RouteStaticResource {
 	public final void pathArea(final RoutingExchange ex) throws IOException {
 		ex.ok(fileContent);
 	}
+	
+//	@Route(path = "/vr/:n", methods = Route.HttpMethod.GET, produces = "text/html")
+//	public final void pathParamVr(final RoutingExchange ex) throws IOException {
+//		ex.ok(fileContent);
+//	}
 
-	@Route(path = "/form*", methods = Route.HttpMethod.GET, produces = "text/html")
-	public final void pathForm(final RoutingExchange ex) throws IOException {
+	@Route(path = "/vr*", methods = Route.HttpMethod.GET, produces = "text/html")
+	public final void pathAnyVr(final RoutingExchange ex) throws IOException {
 		ex.ok(fileContent);
 	}
 
