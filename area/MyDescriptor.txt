@@ -10,6 +10,7 @@
 # COMANDOS DEV
 
 	mvnw quarkus:add-extension -Dextensions="hibernate-orm-panache,jdbc-postgresql,rest-jackson"
+	mvnw quarkus:add-extension -Dextensions="jdbc-h2"
 
 # DOCKER
 

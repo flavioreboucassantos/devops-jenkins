@@ -8,7 +8,7 @@ public abstract class ControllerBase {
 	 *
 	 * @return Response.ResponseBuilder with Response.Status.BAD_REQUEST
 	 */
-	public Response.ResponseBuilder disappointedIdBadRequest() {
+	protected final Response.ResponseBuilder disappointedIdBadRequest() {
 		return Response.status(Response.Status.BAD_REQUEST);
 	}
 
@@ -16,7 +16,7 @@ public abstract class ControllerBase {
 	 *
 	 * @return Response.ResponseBuilder with Response.Status.CONFLICT
 	 */
-	public Response.ResponseBuilder disappointedIdConflict() {
+	protected final Response.ResponseBuilder disappointedIdConflict() {
 		return Response.status(Response.Status.CONFLICT);
 	}
 
@@ -24,7 +24,7 @@ public abstract class ControllerBase {
 	 *
 	 * @return Response.ResponseBuilder with Response.Status.NOT_MODIFIED
 	 */
-	public Response.ResponseBuilder disappointedPersist() {
+	protected final Response.ResponseBuilder disappointedPersist() {
 		return Response.status(Response.Status.NOT_MODIFIED);
 	}
 
@@ -32,7 +32,7 @@ public abstract class ControllerBase {
 	 *
 	 * @return Response.ResponseBuilder with Response.Status.FORBIDDEN
 	 */
-	public Response.ResponseBuilder disappointedFind() {
+	protected final Response.ResponseBuilder disappointedFind() {
 		return Response.status(Response.Status.FORBIDDEN);
 	}
 
@@ -40,7 +40,7 @@ public abstract class ControllerBase {
 	 * 
 	 * @return Response.ResponseBuilder with Response.Status.NOT_MODIFIED
 	 */
-	public Response.ResponseBuilder disappointedUpdate() {
+	protected final Response.ResponseBuilder disappointedUpdate() {
 		return Response.status(Response.Status.NOT_MODIFIED);
 	}
 
