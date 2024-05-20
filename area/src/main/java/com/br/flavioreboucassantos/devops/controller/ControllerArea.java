@@ -66,7 +66,7 @@ public final class ControllerArea extends ControllerBase {
 		if (serviceArea.deleteById(idArea))
 			return Response.ok().build();
 		else
-			return disappointedFind().entity("removeArea-id-NOT_FOUND").build();
+			return disappointedFind().entity("removeArea-id_NOT_FOUND").build();
 	}
 
 	@GET
@@ -80,7 +80,7 @@ public final class ControllerArea extends ControllerBase {
 		 */
 		EntityArea entityArea;
 		if ((entityArea = serviceArea.findById(idArea)) == null)
-			return disappointedFind().entity("findByIdArea-id-NOT_FOUND").build();
+			return disappointedFind().entity("findByIdArea-id_NOT_FOUND").build();
 
 		return Response.ok(entityArea).build();
 	}
@@ -99,7 +99,7 @@ public final class ControllerArea extends ControllerBase {
 
 		TryResultUpdate<EntityArea> tryResultUpdate = serviceArea.tryUpdate(idArea, consumerEdit);
 		if (tryResultUpdate.notFound())
-			return disappointedFind().entity("updateByIdArea-id-NOT_FOUND").build();
+			return disappointedFind().entity("updateByIdArea-id_NOT_FOUND").build();
 
 		if (tryResultUpdate.updatedEntity() == null)
 			return disappointedUpdate().build();

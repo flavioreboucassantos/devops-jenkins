@@ -30,10 +30,10 @@ public abstract class ControllerBase {
 
 	/**
 	 *
-	 * @return Response.ResponseBuilder with Response.Status.FORBIDDEN
+	 * @return Response.ResponseBuilder with Response.Status.NOT_FOUND
 	 */
 	protected final Response.ResponseBuilder disappointedFind() {
-		return Response.status(Response.Status.FORBIDDEN);
+		return Response.status(Response.Status.NOT_FOUND);
 	}
 
 	/**
