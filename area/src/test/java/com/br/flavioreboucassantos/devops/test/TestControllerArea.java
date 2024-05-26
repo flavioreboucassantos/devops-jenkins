@@ -211,7 +211,7 @@ public class TestControllerArea extends BaseTest {
 				.extract()
 				.response();
 
-		assertEquals(HTTP_STATUSCODE_OK, response.statusCode());
+		assertEquals(HTTP_STATUSCODE_NOT_MODIFIED, response.statusCode());
 		assertTrue(isList(response.jsonPath().get("")));
 		assertNotNull(response.jsonPath().getString("idArea"));
 	}
