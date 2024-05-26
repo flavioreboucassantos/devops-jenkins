@@ -213,6 +213,7 @@ public class TestControllerArea extends BaseTest {
 
 		assertEquals(HTTP_STATUSCODE_OK, response.statusCode());
 		assertTrue(isList(response.jsonPath().get("")));
+		assertNotNull(response.jsonPath().getString("idArea"));
 	}
 
 }
