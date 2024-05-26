@@ -38,8 +38,9 @@
 
 	mvnw quarkus:list-extensions
 	mvnw quarkus:update
+	mvnw test
 	mvnw clean compile quarkus:dev
-	mvnw clean compile quarkus:dev -Dquarkus.profile=PROFILE_NAME	
+	mvnw clean compile quarkus:dev -Dquarkus.profile=PROFILE_NAME		
 
 # COMANDOS PROD
 
