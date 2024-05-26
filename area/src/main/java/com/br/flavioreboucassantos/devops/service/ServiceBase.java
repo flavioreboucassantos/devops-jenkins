@@ -8,13 +8,11 @@ import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 
 /**
- * 
  * @param <E> Entity extends {@link PanacheEntityBase}
- * @param <D> Dto of Entity extends {@link Record}
  * 
  * @author Flávio Rebouças Santos
  */
-public abstract class ServiceBase<E extends PanacheEntityBase, D extends Record> implements PanacheRepository<E> {
+public abstract class ServiceBase<E extends PanacheEntityBase> implements PanacheRepository<E> {
 
 	@Transactional
 	protected final TryResultUpdate<E> tryCommitUpdate(final long id, final Consumer<E> consumerEdit) {
