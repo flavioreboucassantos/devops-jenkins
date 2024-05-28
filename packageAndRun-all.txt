@@ -1,4 +1,4 @@
-# tasks
+# area
     mvn clean test -f area
 	mvn clean package -f area
 	java -jar area\target\quarkus-app\quarkus-run.jar
