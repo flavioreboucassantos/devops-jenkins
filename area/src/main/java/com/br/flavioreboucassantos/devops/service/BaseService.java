@@ -9,10 +9,9 @@ import jakarta.transaction.Transactional;
 
 /**
  * @param <E> Entity extends {@link PanacheEntityBase}
- * 
- * @author Flávio Rebouças Santos
+ * @author Flávio Rebouças Santos - flavioReboucasSantos@gmail.com
  */
-public abstract class ServiceBase<E extends PanacheEntityBase> implements PanacheRepository<E> {
+public abstract class BaseService<E extends PanacheEntityBase> implements PanacheRepository<E> {
 
 	@Transactional
 	protected final TryResultUpdate<E> tryCommitUpdate(final long id, final Consumer<E> consumerEdit) {

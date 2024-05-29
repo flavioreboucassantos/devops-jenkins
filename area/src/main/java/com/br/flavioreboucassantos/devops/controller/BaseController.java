@@ -4,6 +4,9 @@ import java.util.concurrent.TimeUnit;
 
 import jakarta.ws.rs.core.Response;
 
+/**
+ * @author Flávio Rebouças Santos - flavioReboucasSantos@gmail.com
+ */
 public abstract class BaseController {
 
 	protected final void sleep(final long seconds) {

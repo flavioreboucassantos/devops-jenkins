@@ -9,6 +9,9 @@ import io.quarkus.vertx.web.Route;
 import io.quarkus.vertx.web.RoutingExchange;
 import jakarta.enterprise.context.ApplicationScoped;
 
+/**
+ * @author Flávio Rebouças Santos - flavioReboucasSantos@gmail.com
+ */
 @ApplicationScoped
 public final class RouteStaticResource {
 

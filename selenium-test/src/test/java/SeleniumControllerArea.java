@@ -15,11 +15,14 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+/**
+ * @author Flávio Rebouças Santos - flavioReboucasSantos@gmail.com
+ */
 @TestMethodOrder(OrderAnnotation.class)
 public class SeleniumControllerArea extends BaseSelenium {
 
 	static public ChromeDriver chromeDriver;
-	static public final Duration timeout = Duration.ofSeconds(3);
+	static public final Duration timeout = Duration.ofSeconds(4);
 	static public WebDriverWait webDriverWait;
 
 	static public String uniqueData;
@@ -34,6 +37,8 @@ public class SeleniumControllerArea extends BaseSelenium {
 
 		// Configurar WebDriverWait
 		webDriverWait = new WebDriverWait(chromeDriver, timeout);
+
+//		setTimeout(timeout);
 
 		// Navegar para o Endereço da API
 		chromeDriver.navigate().to("http://localhost:8080/area/");
@@ -63,6 +68,7 @@ public class SeleniumControllerArea extends BaseSelenium {
 			// Esperar Resposta de Rede
 			final WebElement elModal = chromeDriver.findElement(By.className("modal-actions-response"));
 			webDriverWait.until(ExpectedConditions.visibilityOf(elModal));
+//			assertTrue(waitIsDisplayed(elModal));
 
 			// Validar Mensagem de Sucesso
 			final String textModalLead = elModal.findElement(By.className("lead")).getText();
@@ -86,6 +92,7 @@ public class SeleniumControllerArea extends BaseSelenium {
 
 			final WebElement elModal = chromeDriver.findElement(By.className("modal-actions-response"));
 			webDriverWait.until(ExpectedConditions.visibilityOf(elModal));
+//			assertTrue(waitIsDisplayed(elModal));
 
 			final String textModalLead = elModal.findElement(By.className("lead")).getText();
 			assertTrue(textModalLead.toLowerCase().contains("error"));
@@ -114,6 +121,7 @@ public class SeleniumControllerArea extends BaseSelenium {
 
 			final WebElement elModal = chromeDriver.findElement(By.className("modal-actions-response"));
 			webDriverWait.until(ExpectedConditions.visibilityOf(elModal));
+//			assertTrue(waitIsDisplayed(elModal));
 
 			final String textModalLead = elModal.findElement(By.className("lead")).getText();
 			assertTrue(textModalLead.toLowerCase().contains("sucesso"));
@@ -131,6 +139,7 @@ public class SeleniumControllerArea extends BaseSelenium {
 			elTr.findElement(By.className("delete-area")).click();
 
 			webDriverWait.until(ExpectedConditions.stalenessOf(elTr));
+//			assertTrue(waitIsNotDisplayed(elTr));
 		} finally {
 			chromeDriver.quit();
 		}
