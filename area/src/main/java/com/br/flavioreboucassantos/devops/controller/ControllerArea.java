@@ -27,7 +27,7 @@ import jakarta.ws.rs.core.Response;
 @Path("/api")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public final class ControllerArea extends ControllerBase {
+public final class ControllerArea extends BaseController {
 
 	private final Logger LOG = LoggerFactory.getLogger(ControllerArea.class);
 
@@ -42,6 +42,8 @@ public final class ControllerArea extends ControllerBase {
 	public Response createArea(final DtoArea dtoArea) {
 
 		LOG.info("--- Entrando createArea ---");
+
+//		sleep(5);
 
 		/*
 		 * tryPersist
@@ -60,6 +62,8 @@ public final class ControllerArea extends ControllerBase {
 
 		LOG.info("--- Entrando removeArea: {} ---", idArea);
 
+//		sleep(5);
+
 		/*
 		 * deleteById
 		 */
@@ -74,6 +78,8 @@ public final class ControllerArea extends ControllerBase {
 	public Response findByIdArea(final @PathParam("id") long idArea) {
 
 		LOG.info("--- Entrando findByIdArea: {} ---", idArea);
+
+//		sleep(5);
 
 		/*
 		 * findById
@@ -90,6 +96,8 @@ public final class ControllerArea extends ControllerBase {
 	public Response updateByIdArea(final @PathParam("id") long idArea, final DtoArea dtoArea) {
 
 		LOG.info("--- Entrando updateByIdArea: {} ---", idArea);
+
+//		sleep(5);
 
 		final Consumer<EntityArea> consumerEdit = (final EntityArea entityArea) -> {
 			entityArea.rawData = dtoArea.rawData();

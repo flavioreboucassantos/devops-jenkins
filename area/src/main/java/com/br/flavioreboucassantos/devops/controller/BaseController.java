@@ -1,8 +1,18 @@
 package com.br.flavioreboucassantos.devops.controller;
 
+import java.util.concurrent.TimeUnit;
+
 import jakarta.ws.rs.core.Response;
 
-public abstract class ControllerBase {
+public abstract class BaseController {
+
+	protected final void sleep(final long seconds) {
+		try {
+			TimeUnit.SECONDS.sleep(seconds);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 *

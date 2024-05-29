@@ -59,7 +59,7 @@ public class TestControllerArea extends BaseTest {
 	}
 
 	@Test
-	@DisplayName("createPost-CREATED")
+	@DisplayName("createArea-CREATED")
 	public void createArea_CREATED() {
 		DtoArea dtoArea = new DtoArea(-1, rndStr(), rndStr(), true);
 
@@ -76,7 +76,7 @@ public class TestControllerArea extends BaseTest {
 	}
 
 	@Test
-	@DisplayName("createPost-NOT_MODIFIED")
+	@DisplayName("createArea-NOT_MODIFIED")
 	public void createArea_NOT_MODIFIED() {
 		DtoArea dtoArea = new DtoArea(-1, rndStr(), entityAreaToUniquePositive.uniqueData, true);
 
