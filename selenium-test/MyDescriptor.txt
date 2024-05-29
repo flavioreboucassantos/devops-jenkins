@@ -1,0 +1,14 @@
+# AMBIENTE
+
+	selenium-java:4.21.0
+	selenium-server-4.21.0
+
+# COMANDOS DEV
+
+	mvn clean test -Dtest=SeleniumControllerArea ### Use "-Dtest=ClassName" or Add "Test" to the Class Name.
+
+	java -jar selenium-server-<version>.jar hub
+	java -jar selenium-server-<version>.jar node --port 5555
+	java -jar selenium-server-<version>.jar node --port 6666
+	
+	mvn clean test -Dtest=SeleniumGridControllerArea ### Use "-Dtest=ClassName" or Add "Test" to the Class Name.

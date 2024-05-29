@@ -3,8 +3,6 @@ package com.br.flavioreboucassantos.devops.test;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.ws.rs.core.Response;
-
 public abstract class BaseTest {
 
 	static final int HTTP_STATUSCODE_CREATED = 201;

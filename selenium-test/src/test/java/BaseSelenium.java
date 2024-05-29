@@ -21,6 +21,7 @@ public abstract class BaseSelenium {
 
 	/**
 	 * Path to use assertTrue.
+	 * 
 	 * @param el
 	 * @param timeout
 	 * @return true if isDisplayed before timeout. false if not isDisplayed until timeout.
@@ -39,9 +40,9 @@ public abstract class BaseSelenium {
 	}
 
 	/**
-	 * Path to use assertTrue.
-	 * <br>
+	 * Path to use assertTrue. <br>
 	 * timeout default is 15 seconds.
+	 * 
 	 * @param el
 	 * @return true if isDisplayed before timeout. false if not isDisplayed until timeout.
 	 */
@@ -51,6 +52,7 @@ public abstract class BaseSelenium {
 
 	/**
 	 * Path to use assertTrue.
+	 * 
 	 * @param el
 	 * @param timeout
 	 * @return true if not isDisplayed or is not attached to the DOM before timeout. false if isDisplayed until timeout.
@@ -70,9 +72,9 @@ public abstract class BaseSelenium {
 	}
 
 	/**
-	 * Path to use assertTrue.
-	 * <br>
+	 * Path to use assertTrue. <br>
 	 * timeout default is 15 seconds.
+	 * 
 	 * @param el
 	 * @return true if not isDisplayed or is not attached to the DOM before timeout. false if isDisplayed until timeout.
 	 */

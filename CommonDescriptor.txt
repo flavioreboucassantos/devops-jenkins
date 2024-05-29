@@ -1,7 +1,7 @@
 # AMBIENTE
 
 	JDK 21
-	<quarkus.platform.version>3.10.1</quarkus.platform.version>
+	<quarkus.platform.version>3.10.2</quarkus.platform.version>
 
 # Environment Variable
 
@@ -38,7 +38,7 @@
 
 	mvnw quarkus:list-extensions
 	mvnw quarkus:update
-	mvnw clean test
+	mvnw clean test ### Use "-Dtest=ClassName" or Add "Test" to the Class Name.
 	mvnw clean compile quarkus:dev
 	mvnw clean compile quarkus:dev -Dquarkus.profile=PROFILE_NAME		
 

@@ -2,3 +2,6 @@
     mvn clean test -f area
 	mvn clean package -f area
 	java -jar area\target\quarkus-app\quarkus-run.jar
+	
+# selenium-test
+    mvn clean test -f selenium-test -Dtest=SeleniumControllerArea ### Use "-Dtest=ClassName" or Add "Test" to the Class Name.
