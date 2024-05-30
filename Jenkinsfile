@@ -1,34 +1,22 @@
-pipeline{
-	agent{
-		label "node"
-	}
-	stages{
-		stage("A"){
-			steps{
-				echo "========executing A========"
-			}
-			post{
-				always{
-					echo "========always========"
-				}
-				success{
-					echo "========A executed successfully========"
-				}
-				failure{
-					echo "========A execution failed========"
-				}
-			}
-		}
-	}
-	post{
-		always{
-			echo "========always========"
-		}
-		success{
-			echo "========pipeline executed successfully ========"
-		}
-		failure{
-			echo "========pipeline execution failed========"
-		}
-	}
+pipeline {
+    agent any
+    stages {
+        stage ('Início') {
+            steps {
+                bat 'echo início'
+            }
+        }
+        stage ('Meio') {
+            steps {
+                bat 'echo meio'
+                bat 'echo meio 2'
+            }
+        }
+         stage ('Fim') {
+            steps {
+                sleep(5)
+                bat 'echo fim'
+            }
+        }
+    }
 }
