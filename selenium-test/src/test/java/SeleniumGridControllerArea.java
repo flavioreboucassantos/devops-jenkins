@@ -22,8 +22,8 @@ public class SeleniumGridControllerArea extends BaseSeleniumControllerArea {
 		chromeOptions.setCapability("browserName", "chrome");
 //		chromeOptions.setCapability("browserVersion", "do not use");
 		chromeOptions.setCapability("platformName", "Windows");
-		chromeOptions.setCapability("se:name", "Selenium Grid For Controller Area");
-		chromeOptions.setCapability("se:workingClass", "SeleniumGridControllerArea");
+		chromeOptions.setCapability("se:name", "Grid For Controller Area");
+		chromeOptions.setCapability("se:workingClass", getClass().getSimpleName());
 
 		webDriver = new RemoteWebDriver(URI.create(strUrlRemoteWebDriver).toURL(), chromeOptions);
 		webDriver.manage().timeouts().implicitlyWait(timeout);
