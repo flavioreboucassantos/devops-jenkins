@@ -45,6 +45,6 @@
 # COMANDOS PROD
 
 	"Empacota sem testes."
-	mvn clean package -DskipTests
+	mvn clean package -DskipTests=true
 	mvnw clean package -DskipTests
 	java -jar target\quarkus-app\quarkus-run.jar ### Executa pacote de PRODUÇÃO.
