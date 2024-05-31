@@ -1,5 +1,5 @@
 # area
-    mvn clean test -f area
+    mvn clean test -f area ### Use "-Dtest=ClassName" or Add "Test" to the Class Name.
 	mvn clean package -f area -DskipTests
 	mvn clean package -f area
 	java -jar area\target\quarkus-app\quarkus-run.jar
