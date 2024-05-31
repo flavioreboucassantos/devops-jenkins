@@ -5,6 +5,7 @@ pipeline {
         projectPathArea = 'area'
         projectPathSeleniumTest = 'selenium-test'
         jobParamPathBackendArea = '../Pipeline/area'
+        jobParamMainArgumentArea = 'TESTMainArgumentAreaTEST'
     }
     stages {
         stage('Fetching changes from the remote Git repository') {
@@ -47,39 +48,26 @@ pipeline {
                 }
             }
         }
-        stage('RUN AREA + SELENIUM + GRID') {
-            steps {
-                script {
-                    def branches = [:]
-                    branches['RunBackend'] = {
+        stage('>>>') {
+            parallel {
+                stage('RUN AREA') {
+                    steps {
                         build job: 'RunBackend', parameters: [
                             string(name: 'PathBackend', value:"$jobParamPathBackendArea"),
-                            string(name: 'AbsoluteTimeoutMinutes', value:'2')
+                            string(name: 'AbsoluteTimeoutMinutes', value:'5'),
+                            string(name: 'MainArgument', value:"$jobParamMainArgumentArea")
                         ]
                     }
-                    branches['SeleniumTest'] = {
+                }
+                stage('SELENIUM TEST') {
+                    steps {
                         sleep(time:10, unit:'SECONDS')
                         bat "mvn clean -f $projectPathSeleniumTest -DskipTests"
                         bat "mvn test -f $projectPathSeleniumTest -Dtest=SeleniumControllerArea"
                         bat "mvn test -f $projectPathSeleniumTest -Dtest=SeleniumGridControllerArea"
+                        bat "wmic PROCESS Where \"name Like '%%java.exe%%' AND CommandLine like '%%$jobParamMainArgumentArea%%'\" Call Terminate"
                     }
-                    parallel branches
                 }
-            }
-        }
-        stage('SELENIUM-TEST clean skipTests') {
-            steps {
-                bat "mvn clean -f $projectPathSeleniumTest -DskipTests"
-            }
-        }
-        stage('SELENIUM-TEST test') {
-            steps {
-                bat "mvn test -f $projectPathSeleniumTest -Dtest=SeleniumControllerArea"
-            }
-        }
-        stage('SELENIUM-TEST GRID test') {
-            steps {
-                bat "mvn test -f $projectPathSeleniumTest -Dtest=SeleniumGridControllerArea"
             }
         }
     }

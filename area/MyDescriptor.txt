@@ -11,6 +11,11 @@
 
 	mvnw quarkus:add-extension -Dextensions="hibernate-orm-panache,jdbc-postgresql,rest-jackson"
 	mvnw quarkus:add-extension -Dextensions="jdbc-h2"
+	
+# BATCH
+
+	java -jar %PathBackend%/target/quarkus-app/quarkus-run.jar %MainArgument%
+	wmic PROCESS Where \"name Like '%%java.exe%%' AND CommandLine like '%%MainArgument%%'\" Call Terminate
 
 # DOCKER
 
