@@ -15,7 +15,7 @@
 # BATCH
 
 	java -jar %PathBackend%/target/quarkus-app/quarkus-run.jar %MainArgument%
-	wmic PROCESS Where \"name Like '%%java.exe%%' AND CommandLine like '%%MainArgument%%'\" Call Terminate
+	wmic PROCESS Where "name Like '%java.exe%' AND CommandLine like '%MainArgument%'" Call Terminate
 
 # DOCKER
 
