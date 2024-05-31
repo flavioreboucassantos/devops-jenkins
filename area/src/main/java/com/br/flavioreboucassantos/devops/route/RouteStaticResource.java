@@ -1,9 +1,8 @@
 package com.br.flavioreboucassantos.devops.route;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import io.quarkus.vertx.web.Route;
 import io.quarkus.vertx.web.RoutingExchange;
@@ -15,15 +14,15 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public final class RouteStaticResource {
 
-	private final String basePath = "src/main/resources/META-INF/resources/";
-	private final String filePath = basePath + "index.html";
-	private final Path path = Paths.get(filePath);
+	private final String pathResources = "META-INF/resources/";
+	private final String pathFile = pathResources + "index.html";
+	private final InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(pathFile);
 	private final String fileContent;
 
 //	private final String pathToExclude = "api";
 
 	public RouteStaticResource() throws IOException {
-		fileContent = Files.readString(path);
+		fileContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
 	/*
