@@ -77,10 +77,10 @@ pipeline {
             archiveArtifacts artifacts: 'area/target/area-*.jar', followSymlinks: false, onlyIfSuccessful: true
         }
         unsuccessful {
-            emailext attachLog: true, body: 'Logs Attached.', subject: 'Build $BUILD_NUMBER unsuccessful', to: 'flavioreboucassantos@gmail.com'
+            emailext attachLog: true, body: 'Logs Attached.', subject: 'Build $BUILD_NUMBER unsuccessful', to: "$EmailextTo"
         }
         fixed {
-            emailext attachLog: true, body: 'Logs Attached.', subject: 'Build $BUILD_NUMBER fixed', to: 'flavioreboucassantos@gmail.com'
+            emailext attachLog: true, body: 'Logs Attached.', subject: 'Build $BUILD_NUMBER fixed', to: "$EmailextTo"
         }
     }
 }
