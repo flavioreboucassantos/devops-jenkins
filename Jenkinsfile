@@ -2,25 +2,25 @@ pipeline {
     agent any
     environment {
         sonarLocal = tool 'SONAR_LOCAL'
-        projectPathArea = 'area'
-        projectPathSeleniumTest = 'selenium-test'
-        jobParamPathBackendArea = '../Pipeline/area'
-        jobParamMainArgumentArea = 'TESTMainArgumentAreaTEST'
+        pathProjectArea = 'area'
+        pathProjectSeleniumTest = 'selenium-test'
+        jobParamPathProjectArea = '../Pipeline/area'
+        jobParamMainArgumentArea = 'JenkinsRunProjectArea'
     }
     stages {
-        stage('Fetching changes from the remote Git repository') {
+        stage('Fetching changes from the remote Git repository.') {
             steps {
                 git url: 'https://github.com/flavioreboucassantos/devops-jenkins.git'
             }
         }
         stage('AREA clean package skipTests') {
             steps {
-                bat "mvn clean package -f $projectPathArea -DskipTests"
+                bat "mvn clean package -f $pathProjectArea -DskipTests"
             }
         }
         stage('AREA test') {
             steps {
-                bat "mvn test -f $projectPathArea"
+                bat "mvn test -f $pathProjectArea"
             }
         }
         stage('AREA sonar:sonar skipTests') {
@@ -28,7 +28,7 @@ pipeline {
                 withSonarQubeEnv('SONARQUBE_SERVER') {
                     // Using sonar-maven-plugin
                     bat 'mvn sonar:sonar ' +
-                    "-f $projectPathArea " +
+                    "-f $pathProjectArea " +
                     '-DskipTests '+
                     '-Dsonar.projectKey=Area '+
                     '-Dsonar.sources=src/ '+
@@ -36,7 +36,7 @@ pipeline {
                 }
             }
         }
-        stage('Quality Gate') {
+        stage('QUALITY GATE') {
             steps {
                 script {
                     timeout(time: 1, unit: 'HOURS') {
@@ -48,27 +48,39 @@ pipeline {
                 }
             }
         }
-        stage('>>>') {
+        stage('Next two stages in parallel.') {
             parallel {
-                stage('RUN AREA') {
+                stage('SELENIUM') {
                     steps {
-                        build job: 'RunBackend', parameters: [
-                            string(name: 'PathBackend', value:"$jobParamPathBackendArea"),
+                        sleep(time:10, unit:'SECONDS')
+                        bat "mvn clean -f $pathProjectSeleniumTest -DskipTests"
+                        bat "mvn test -f $pathProjectSeleniumTest -Dtest=SeleniumControllerArea"
+                        bat "mvn test -f $pathProjectSeleniumTest -Dtest=SeleniumGridControllerArea"
+                        bat "wmic PROCESS Where \"name Like '%%java.exe%%' AND CommandLine like '%%$jobParamMainArgumentArea%%'\" Call Terminate"
+                    }
+                }
+                stage('RUN AREA FOR SELENIUM') {
+                    steps {
+                        build job: 'RunProjectArea', parameters: [
+                            string(name: 'PathProject', value:"$jobParamPathProjectArea"),
                             string(name: 'AbsoluteTimeoutMinutes', value:'5'),
                             string(name: 'MainArgument', value:"$jobParamMainArgumentArea")
                         ]
                     }
                 }
-                stage('SELENIUM TEST') {
-                    steps {
-                        sleep(time:10, unit:'SECONDS')
-                        bat "mvn clean -f $projectPathSeleniumTest -DskipTests"
-                        bat "mvn test -f $projectPathSeleniumTest -Dtest=SeleniumControllerArea"
-                        bat "mvn test -f $projectPathSeleniumTest -Dtest=SeleniumGridControllerArea"
-                        bat "wmic PROCESS Where \"name Like '%%java.exe%%' AND CommandLine like '%%$jobParamMainArgumentArea%%'\" Call Terminate"
-                    }
-                }
             }
+        }
+    }
+    post {
+        always {
+            junit allowEmptyResults: true, stdioRetention: '', testResults: 'area/target/surefire-reports/*.xml, selenium-test/target/surefire-reports/*.xml'
+            archiveArtifacts artifacts: 'area/target/area-*.jar', followSymlinks: false, onlyIfSuccessful: true
+        }
+        unsuccessful {
+            emailext attachLog: true, body: 'Logs Attached.', subject: 'Build $BUILD_NUMBER unsuccessful', to: 'flavioreboucassantos@gmail.com'
+        }
+        fixed {
+            emailext attachLog: true, body: 'Logs Attached.', subject: 'Build $BUILD_NUMBER fixed', to: 'flavioreboucassantos@gmail.com'
         }
     }
 }
