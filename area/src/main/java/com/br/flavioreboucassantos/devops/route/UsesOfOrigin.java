@@ -1,8 +1,11 @@
 package com.br.flavioreboucassantos.devops.route;
 
+/**
+ * @author Flávio Rebouças Santos - flavioReboucasSantos@gmail.com
+ */
 public final class UsesOfOrigin {
 
-	private long timeToResetMS = Long.MAX_VALUE;
+	private long timeToResetMS = Long.MIN_VALUE;
 
 	public int uses = 1; // first use
 

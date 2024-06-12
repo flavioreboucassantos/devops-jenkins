@@ -1,5 +1,8 @@
 package com.br.flavioreboucassantos.devops.route;
 
+/**
+ * @author Flávio Rebouças Santos - flavioReboucasSantos@gmail.com
+ */
 public final class BundleOfUses {
 	public final UsesOfOrigin usesOfOrigin1of4;
 	public final UsesOfOrigin usesOfOrigin2of4;

@@ -33,7 +33,7 @@ public class ThreadSystemLoad extends TimerTask {
 	private final int limitListHost;
 
 	private final long intervalToResetMS;
-	private long timeToResetMS = Long.MAX_VALUE;
+	private long timeToResetMS = Long.MIN_VALUE;
 	private final UsesOfOrigin[] mapUsesOfOriginByOrigin1of4 = new UsesOfOrigin[255];
 	private final UsesOfOrigin[][] mapUsesOfOriginByOrigin2of4 = new UsesOfOrigin[255][255];
 	private final UsesOfOrigin[][][] mapUsesOfOriginByOrigin3of4 = new UsesOfOrigin[255][255][255];
@@ -42,8 +42,10 @@ public class ThreadSystemLoad extends TimerTask {
 //	System.out.println(x);
 
 	private final void updateTimeToResetMS() {
-		if (timeToResetMS >= System.currentTimeMillis())
+		if (System.currentTimeMillis() >= timeToResetMS) {
 			timeToResetMS = System.currentTimeMillis() + intervalToResetMS;
+			System.out.println("reset");
+		}
 	}
 
 	private final UsesOfOrigin prepareAndGetItem(final UsesOfOrigin[] map, final int origin) {
