@@ -9,16 +9,21 @@ public final class UsesOfOrigin {
 
 	private int uses = 0;
 
-	final public UsesOfOrigin incrementAndTryReset(final long timeToResetMS) {
+	public final UsesOfOrigin incrementAndTryReset(final long timeToResetMS) {
 		if (timeToResetMS > this.timeToResetMS) {
 			this.timeToResetMS = timeToResetMS;
-			uses = 1;			
+			uses = 1;
 		} else
 			uses++;
 		return this;
 	}
-	
-	final public int getUses() {
+
+	public final int getUsesAndTryReset(final long timeToResetMS) {
+		if (timeToResetMS > this.timeToResetMS) {
+			this.timeToResetMS = timeToResetMS;
+			uses = 0;
+			return 0;
+		}
 		return uses;
 	}
 }

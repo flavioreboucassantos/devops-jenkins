@@ -12,17 +12,20 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Flávio Rebouças Santos - flavioReboucasSantos@gmail.com
  */
-public class ThreadSystemLoad extends TimerTask {
+public final class ThreadSystemLoad extends TimerTask {
+
+	/**
+	 * System Information
+	 */
+	static public final Runtime runtime = Runtime.getRuntime();
+	static public final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+
+	static public final long maxMemory = runtime.maxMemory();
+	static public final long totalMemory = runtime.totalMemory();
+	static public long freeMemory;
+	static public double systemLoadAverage;
 
 	private final Logger LOG = LoggerFactory.getLogger(ThreadSystemLoad.class);
-
-	static final Runtime runtime = Runtime.getRuntime();
-	static final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
-
-	static final long maxMemory = runtime.maxMemory();
-	static final long totalMemory = runtime.totalMemory();
-	static long freeMemory;
-	static double systemLoadAverage;
 
 	/**
 	 * 
@@ -34,17 +37,43 @@ public class ThreadSystemLoad extends TimerTask {
 
 	private final long intervalToResetMS;
 	private long timeToResetMS = Long.MIN_VALUE;
-	private final UsesOfOrigin[] mapUsesOfOriginByOrigin1of4 = new UsesOfOrigin[255];
-	private final UsesOfOrigin[][] mapUsesOfOriginByOrigin2of4 = new UsesOfOrigin[255][255];
-	private final UsesOfOrigin[][][] mapUsesOfOriginByOrigin3of4 = new UsesOfOrigin[255][255][255];
+	private final UsesOfOrigin[] mapUsesOfOriginByOrigin1of4 = new UsesOfOrigin[256];
+	private final UsesOfOrigin[][] mapUsesOfOriginByOrigin2of4 = new UsesOfOrigin[256][256];
+	private final UsesOfOrigin[][][] mapUsesOfOriginByOrigin3of4 = new UsesOfOrigin[256][256][256];
 	private final Map<String, BundleOfUses> mapBundleOfUsesByOrigin4of4;
+	private final int[][] mapLimitOfUsesByOriginByLoadLevel;
 
-//	System.out.println(x);
+	private final int getLoadLevel() {
+		if (systemLoadAverage <= 50) {
+			return 1;
+		} else {
+			return 1;
+		}
+	}
+	
+	private final boolean allowFromOriginX(final int limitOfUsesOfOrigin, final UsesOfOrigin usesOfOrigin, final long timeToResetMS) {
+		return limitOfUsesOfOrigin < 0 || usesOfOrigin.getUsesAndTryReset(timeToResetMS) < limitOfUsesOfOrigin;
+	}
+
+	private final void printAllFrom(final Map<String, BundleOfUses> map, final long timeToResetMS) {
+		LOG.info("------------------------------ printAllFrom ------------------------------");
+		map.forEach((final String origin4of4, final BundleOfUses bundleOfUses) -> {
+			String info = "";
+			info += origin4of4;
+			info += " (" + bundleOfUses.usesOfOrigin1of4.getUsesAndTryReset(timeToResetMS);
+			info += " | " + bundleOfUses.usesOfOrigin2of4.getUsesAndTryReset(timeToResetMS);
+			info += " | " + bundleOfUses.usesOfOrigin3of4.getUsesAndTryReset(timeToResetMS);
+			info += " | " + bundleOfUses.usesOfOrigin4of4.getUsesAndTryReset(timeToResetMS);
+			info += ")";
+			LOG.info(info);
+		});
+	}
 
 	private final void updateTimeToResetMS() {
+		printAllFrom(mapBundleOfUsesByOrigin4of4, timeToResetMS);
 		if (System.currentTimeMillis() >= timeToResetMS) {
 			timeToResetMS = System.currentTimeMillis() + intervalToResetMS;
-			System.out.println("reset");
+			LOG.info("RESETED");
 		}
 	}
 
@@ -59,7 +88,7 @@ public class ThreadSystemLoad extends TimerTask {
 
 	private final UsesOfOrigin[] prepareAndGet1D(final UsesOfOrigin[][] map, final int origin) {
 		if (map[origin] == null) {
-			final UsesOfOrigin[] newMap = new UsesOfOrigin[255];
+			final UsesOfOrigin[] newMap = new UsesOfOrigin[256];
 			map[origin] = newMap;
 			return newMap;
 		} else
@@ -68,7 +97,7 @@ public class ThreadSystemLoad extends TimerTask {
 
 	private final UsesOfOrigin[][] prepareAndGet2D(final UsesOfOrigin[][][] map, final int origin) {
 		if (map[origin] == null) {
-			final UsesOfOrigin[][] newMap = new UsesOfOrigin[255][255];
+			final UsesOfOrigin[][] newMap = new UsesOfOrigin[256][256];
 			map[origin] = newMap;
 			return newMap;
 		} else
@@ -91,11 +120,7 @@ public class ThreadSystemLoad extends TimerTask {
 		return prepareAndGetItem(prepareAndGet1D(prepareAndGet2D(mapUsesOfOriginByOrigin3of4, origin1of4), origin2of4), origin3of4);
 	}
 
-	private final void doWriteOfUse(final String origin4of4) {
-//		System.out.println(host);
-
-		final long timeToResetMS = this.timeToResetMS;
-
+	private final void doWriteOfUse(final String origin4of4, final long timeToResetMS) {
 		if (mapBundleOfUsesByOrigin4of4.containsKey(origin4of4)) {
 			final BundleOfUses bundleOfUses = mapBundleOfUsesByOrigin4of4.get(origin4of4);
 
@@ -105,10 +130,10 @@ public class ThreadSystemLoad extends TimerTask {
 			bundleOfUses.usesOfOrigin4of4.incrementAndTryReset(timeToResetMS);
 
 		} else {
-			final String[] origins123 = origin4of4.split("\\.");
-			final int origin1of4 = Integer.valueOf(origins123[0]);
-			final int origin2of4 = Integer.valueOf(origins123[1]);
-			final int origin3of4 = Integer.valueOf(origins123[2]);
+			final String[] origins1234 = origin4of4.split("\\.");
+			final int origin1of4 = Integer.valueOf(origins1234[0]);
+			final int origin2of4 = Integer.valueOf(origins1234[1]);
+			final int origin3of4 = Integer.valueOf(origins1234[2]);
 
 			final UsesOfOrigin usesOfOrigin1of4 = getUsesOfOrigin(origin1of4).incrementAndTryReset(timeToResetMS);
 			final UsesOfOrigin usesOfOrigin2of4 = getUsesOfOrigin(origin1of4, origin2of4).incrementAndTryReset(timeToResetMS);
@@ -118,20 +143,22 @@ public class ThreadSystemLoad extends TimerTask {
 			mapBundleOfUsesByOrigin4of4.put(origin4of4, new BundleOfUses(usesOfOrigin1of4, usesOfOrigin2of4, usesOfOrigin3of4, usesOfOrigin4of4));
 		}
 
-		final BundleOfUses bundleOfUses = mapBundleOfUsesByOrigin4of4.get(origin4of4);
-		String info = "";
-		info += origin4of4;
-		info += " | " + bundleOfUses.usesOfOrigin1of4.getUses();
-		info += " | " + bundleOfUses.usesOfOrigin2of4.getUses();
-		info += " | " + bundleOfUses.usesOfOrigin3of4.getUses();
-		info += " | " + bundleOfUses.usesOfOrigin4of4.getUses();
-		System.out.println(info);
+//		final BundleOfUses bundleOfUses = mapBundleOfUsesByOrigin4of4.get(origin4of4);
+//		String info = "";
+//		info += origin4of4;
+//		info += " | " + bundleOfUses.usesOfOrigin1of4.getUsesAndTryReset(timeToResetMS);
+//		info += " | " + bundleOfUses.usesOfOrigin2of4.getUsesAndTryReset(timeToResetMS);
+//		info += " | " + bundleOfUses.usesOfOrigin3of4.getUsesAndTryReset(timeToResetMS);
+//		info += " | " + bundleOfUses.usesOfOrigin4of4.getUsesAndTryReset(timeToResetMS);
+//		LOG.info(info);
 	}
 
 	private final void doRunner() {
+		final long timeToResetMS = this.timeToResetMS;
+
 		final int indexToReach = this.indexToReach.get();
 		while (indexRunner != indexToReach) {
-			doWriteOfUse(listHost[indexRunner]);
+			doWriteOfUse(listHost[indexRunner], timeToResetMS);
 
 			if (++indexRunner >= limitListHost)
 				indexRunner = 0;
@@ -142,7 +169,8 @@ public class ThreadSystemLoad extends TimerTask {
 			final AtomicInteger indexHost,
 			final String[] listHost,
 			final Map<String, BundleOfUses> mapBundleOfUsesByOrigin4of4,
-			final long intervalToResetMS) {
+			final long intervalToResetMS,
+			final int[][] mapLimitOfUsesByOriginByLoadLevel) {
 		this.indexToReach = indexHost;
 		indexRunner = indexHost.get();
 		this.listHost = listHost;
@@ -150,6 +178,7 @@ public class ThreadSystemLoad extends TimerTask {
 
 		this.mapBundleOfUsesByOrigin4of4 = mapBundleOfUsesByOrigin4of4;
 		this.intervalToResetMS = intervalToResetMS;
+		this.mapLimitOfUsesByOriginByLoadLevel = mapLimitOfUsesByOriginByLoadLevel;
 	}
 
 	@Override
@@ -174,5 +203,31 @@ public class ThreadSystemLoad extends TimerTask {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}	
+
+	public final boolean allowFromOrigins1234(final String host) {
+		final int loadLevel = getLoadLevel();
+		if (loadLevel == 0) // policy
+			return true;
+
+		final long timeToResetMS = this.timeToResetMS;
+
+		final BundleOfUses bundleOfUses = mapBundleOfUsesByOrigin4of4.get(host);
+		if (bundleOfUses == null)
+			return true;
+
+		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[3][loadLevel], bundleOfUses.usesOfOrigin4of4, timeToResetMS))
+			return false;
+
+		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[2][loadLevel], bundleOfUses.usesOfOrigin3of4, timeToResetMS))
+			return false;
+
+		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[1][loadLevel], bundleOfUses.usesOfOrigin2of4, timeToResetMS))
+			return false;
+
+		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[0][loadLevel], bundleOfUses.usesOfOrigin1of4, timeToResetMS))
+			return false;
+
+		return true;
 	}
 }
