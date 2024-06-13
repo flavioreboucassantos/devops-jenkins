@@ -14,7 +14,6 @@ import io.quarkus.vertx.web.Route;
 import io.quarkus.vertx.web.RouteFilter;
 import io.quarkus.vertx.web.RoutingExchange;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.RoutingContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
@@ -26,6 +25,8 @@ import jakarta.ws.rs.core.Response;
 @ApplicationScoped
 public final class RouteAndFilter {
 
+	static public final int weightHeavyUse = 5; // Light Use is 1
+
 	private final Logger LOG = LoggerFactory.getLogger(RouteAndFilter.class);
 
 	/*
@@ -35,28 +36,28 @@ public final class RouteAndFilter {
 	private Timer timerThreadSystemLoad;
 
 	private final long intervalToThreadSystemLoadMS = 1 * 1000;
-	private final long intervalToResetMS = 20 * 1000;
+	private final long intervalToResetMS = 5 * 1000;
 
 	private final int[][] mapLimitOfUsesByOriginByLoadLevel = {
 			// [0][] = Origin 1 of 4
 			{
 					-1, // [0][0] Load Level 0
-					7 // [0][1] Load Level 1
+					35 // [0][1] Load Level 1
 			},
 			// [1][] = Origin 2 of 4
 			{
 					-1, // [1][0] Load Level 0
-					7 // [1][1] Load Level 1
+					35 // [1][1] Load Level 1
 			},
 			// [2][] = Origin 3 of 4
 			{
 					-1, // [2][0] Load Level 0
-					7 // [2][1] Load Level 1
+					35 // [2][1] Load Level 1
 			},
 			// [3][] = Origin 4 of 4
 			{
 					-1, // [3][0] Load Level 0
-					7 // [3][1] Load Level 1
+					35 // [3][1] Load Level 1
 			},
 	};
 
@@ -71,9 +72,12 @@ public final class RouteAndFilter {
 	private final String fileContent;
 
 //	System.out.println(x);
-	private final void addHost(final String host) {
-		LOG.info(host);
-		threadSystemLoad.addHost(host);
+	private final void addHostLightUse(final String host) {
+		threadSystemLoad.addHostLightUse(host);
+	}
+
+	private final void addHostHeavyUse(final String host) {
+		threadSystemLoad.addHostHeavyUse(host);
 	}
 
 	private final void walkForAddHost(int[] test1of, int[] test2of, int[] test3of, int[] test4of) {
@@ -81,7 +85,7 @@ public final class RouteAndFilter {
 			for (int i2of = test2of[0]; i2of <= test2of[0] + test2of[1]; i2of++) {
 				for (int i3of = test3of[0]; i3of <= test3of[0] + test3of[1]; i3of++) {
 					for (int i4of = test4of[0]; i4of <= test4of[0] + test4of[1]; i4of++) {
-						addHost(i1of + "." + i2of + "." + i3of + "." + i4of);
+						addHostHeavyUse(i1of + "." + i2of + "." + i3of + "." + i4of);
 					}
 				}
 			}
@@ -95,19 +99,19 @@ public final class RouteAndFilter {
 
 	private final void forAddHost(int repetition, int i1of, int i2of, int i3of, int i4of) {
 		for (int i = 0; i < repetition; i++)
-			addHost(i1of + "." + i2of + "." + i3of + "." + i4of);
+			addHostHeavyUse(i1of + "." + i2of + "." + i3of + "." + i4of);
 	}
 
 	private final void simulationMassiveRequest_1() {
-		LOG.info("simulationMassiveRequest_1: imply DENY from 4of4");
+		// LOG.info("simulationMassiveRequest_1: imply DENY from 4of4");
 
 		final int simulationMassiveStep = this.simulationMassiveStep++;
 
-		LOG.info("STEP: " + simulationMassiveStep);
+		// LOG.info("STEP: " + simulationMassiveStep);
 
 		switch (simulationMassiveStep) {
 		case 0:
-			forAddHost(7, 127, 0, 0, 1); // major (7 | 7 | 7 | 7) = imply DENY from 4of4
+			forAddHost(7, 127, 0, 0, 1); // major (35 | 35 | 35 | 35) = imply DENY from 4of4
 			break;
 		default:
 			forAddHost(1, 127, 0, 0, 1); // validation
@@ -116,18 +120,18 @@ public final class RouteAndFilter {
 	}
 
 	private final void simulationMassiveRequest_2() {
-		LOG.info("simulationMassiveRequest_2: imply DENY from 3of4");
+		// LOG.info("simulationMassiveRequest_2: imply DENY from 3of4");
 
 		final int simulationMassiveStep = this.simulationMassiveStep++;
 
-		LOG.info("STEP: " + simulationMassiveStep);
+		// LOG.info("STEP: " + simulationMassiveStep);
 
 		switch (simulationMassiveStep) {
 		case 0:
-			forAddHost(6, 127, 0, 0, 1); // major (6 | 6 | 6 | 6) = imply ALLOW from 1234
+			forAddHost(6, 127, 0, 0, 1); // major (30 | 30 | 30 | 30) = imply ALLOW from 1234
 			break;
 		case 1:
-			forAddHost(1, 127, 0, 0, 255); // major (7 | 7 | 7 | 6) = imply DENY from 3of4
+			forAddHost(1, 127, 0, 0, 255); // major (35 | 35 | 35 | 30) = imply DENY from 3of4
 			break;
 		default:
 			forAddHost(1, 127, 0, 0, 1); // validation
@@ -136,19 +140,19 @@ public final class RouteAndFilter {
 	}
 
 	private final void simulationMassiveRequest_3() {
-		LOG.info("simulationMassiveRequest_3: imply DENY from 2of4");
+		// LOG.info("simulationMassiveRequest_3: imply DENY from 2of4");
 
 		final int simulationMassiveStep = this.simulationMassiveStep++;
 
-		LOG.info("STEP: " + simulationMassiveStep);
+		// LOG.info("STEP: " + simulationMassiveStep);
 
 		switch (simulationMassiveStep) {
 		case 0:
 			forAddHost(5, 127, 0, 0, 1);
-			forAddHost(1, 127, 0, 0, 255); // major (6 | 6 | 6 | 5) = imply ALLOW from 1234
+			forAddHost(1, 127, 0, 0, 255); // major (30 | 30 | 30 | 25) = imply ALLOW from 1234
 			break;
 		case 1:
-			forAddHost(1, 127, 0, 255, 255); // major (7 | 7 | 6 | 5) = imply DENY from 2of4
+			forAddHost(1, 127, 0, 255, 255); // major (35 | 35 | 30 | 25) = imply DENY from 2of4
 			break;
 		default:
 			forAddHost(1, 127, 0, 0, 1); // validation
@@ -157,20 +161,20 @@ public final class RouteAndFilter {
 	}
 
 	private final void simulationMassiveRequest_4() {
-		LOG.info("simulationMassiveRequest_4: imply DENY from 1of4");
+		// LOG.info("simulationMassiveRequest_4: imply DENY from 1of4");
 
 		final int simulationMassiveStep = this.simulationMassiveStep++;
 
-		LOG.info("STEP: " + simulationMassiveStep);
+		// LOG.info("STEP: " + simulationMassiveStep);
 
 		switch (simulationMassiveStep) {
 		case 0:
 			forAddHost(4, 127, 0, 0, 1);
 			forAddHost(1, 127, 0, 0, 255);
-			forAddHost(1, 127, 0, 255, 255); // major (6 | 6 | 5 | 4) = imply ALLOW from 1234
+			forAddHost(1, 127, 0, 255, 255); // major (30 | 30 | 25 | 20) = imply ALLOW from 1234
 			break;
 		case 1:
-			forAddHost(1, 127, 255, 255, 255); // major (7 | 6 | 5 | 4) = imply DENY from 1of4
+			forAddHost(1, 127, 255, 255, 255); // major (35 | 30 | 25 | 20) = imply DENY from 1of4
 			break;
 		default:
 			forAddHost(1, 127, 0, 0, 1); // validation
@@ -178,19 +182,12 @@ public final class RouteAndFilter {
 		}
 	}
 
-	private final void simulation(final RoutingContext rc) {
-		final SocketAddress remoteAddress = rc.request().remoteAddress();
+	private final void filterLight(final RoutingContext rc) {
+		final String host = rc.request().remoteAddress().host();
 
-		final String host = remoteAddress.host();
+		addHostLightUse(host);
 
-//		simulationMassiveRequest_1();
-//		simulationMassiveRequest_2();
-//		simulationMassiveRequest_3();
-		simulationMassiveRequest_4();
-
-//		addHost(host);
-
-		if (threadSystemLoad.allowFromOrigins1234(host)) {
+		if (threadSystemLoad.allowWeightFromOrigins1234(host)) {
 			rc.next();
 		} else {
 			final HttpServerResponse response = rc.response();
@@ -199,13 +196,36 @@ public final class RouteAndFilter {
 		}
 	}
 
+	private final void filterHeavy(final RoutingContext rc) {
+		final String host = rc.request().remoteAddress().host();
+
+//		simulationMassiveRequest_1();
+//		simulationMassiveRequest_2();
+//		simulationMassiveRequest_3();
+//		simulationMassiveRequest_4();
+
+		addHostHeavyUse(host);
+
+		if (threadSystemLoad.allowWeightFromOrigins1234(host)) {
+			rc.next();
+		} else {
+			final HttpServerResponse response = rc.response();
+			response.setStatusCode(Response.Status.TOO_MANY_REQUESTS.getStatusCode());
+			rc.end();
+		}
+	}
+
+	/*
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 */
+
 	public RouteAndFilter() throws IOException {
 		fileContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
 	public final void onStart(@Observes StartupEvent ev) {
 		// (!) The Live Reload will not destroy this thread.
-		threadSystemLoad = new ThreadSystemLoad(intervalToResetMS, mapLimitOfUsesByOriginByLoadLevel);
+		threadSystemLoad = new ThreadSystemLoad(intervalToResetMS, mapLimitOfUsesByOriginByLoadLevel, weightHeavyUse);
 		timerThreadSystemLoad = new Timer();
 		timerThreadSystemLoad.schedule(threadSystemLoad, intervalToThreadSystemLoadMS, intervalToThreadSystemLoadMS);
 	}
@@ -236,7 +256,11 @@ public final class RouteAndFilter {
 //		response.setStatusCode(Response.Status.TOO_MANY_REQUESTS.getStatusCode());
 //		rc.end();
 
-		simulation(rc);
+		final String pathParam = rc.pathParams().get("*");
+		if (pathParam.isEmpty() || !pathParam.startsWith("api")) {
+			filterLight(rc);
+		} else
+			filterHeavy(rc);
 	}
 
 }

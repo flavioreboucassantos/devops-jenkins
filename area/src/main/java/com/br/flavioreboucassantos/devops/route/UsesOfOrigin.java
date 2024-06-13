@@ -9,12 +9,21 @@ public final class UsesOfOrigin {
 
 	private int uses = 0;
 
-	public final UsesOfOrigin incrementAndTryReset(final long timeToResetMS) {
+	public final UsesOfOrigin incrementLightAndTryReset(final long timeToResetMS) {
 		if (timeToResetMS > this.timeToResetMS) {
 			this.timeToResetMS = timeToResetMS;
-			uses = 1;
+			uses = 1; // first use
 		} else
 			uses++;
+		return this;
+	}
+
+	public final UsesOfOrigin incrementHeavyAndTryReset(final long timeToResetMS) {
+		if (timeToResetMS > this.timeToResetMS) {
+			this.timeToResetMS = timeToResetMS;
+			uses = RouteAndFilter.weightHeavyUse; // first use
+		} else
+			uses += RouteAndFilter.weightHeavyUse;
 		return this;
 	}
 
