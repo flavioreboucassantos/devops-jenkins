@@ -2,9 +2,11 @@ package com.br.flavioreboucassantos.devops.route;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntUnaryOperator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,17 +32,19 @@ public final class ThreadSystemLoad extends TimerTask {
 	/**
 	 * 
 	 */
-	private final AtomicInteger indexToReach;
+	private final AtomicInteger indexHost = new AtomicInteger(0);
 	private int indexRunner;
-	private final String[] listHost;
-	private final int limitListHost;
+	private final int limitListHost = 10 * 1000;
+	private final String[] listHost = new String[limitListHost];
+
+	private final IntUnaryOperator updateFunctionIndexHost = i -> (++i >= limitListHost || i < 0) ? 0 : i;
 
 	private final long intervalToResetMS;
 	private long timeToResetMS = Long.MIN_VALUE;
 	private final UsesOfOrigin[] mapUsesOfOriginByOrigin1of4 = new UsesOfOrigin[256];
 	private final UsesOfOrigin[][] mapUsesOfOriginByOrigin2of4 = new UsesOfOrigin[256][256];
 	private final UsesOfOrigin[][][] mapUsesOfOriginByOrigin3of4 = new UsesOfOrigin[256][256][256];
-	private final Map<String, BundleOfUses> mapBundleOfUsesByOrigin4of4;
+	private final Map<String, BundleOfUses> mapBundleOfUsesByOrigin4of4 = new LinkedHashMap<String, BundleOfUses>();
 	private final int[][] mapLimitOfUsesByOriginByLoadLevel;
 
 	private final int getLoadLevel() {
@@ -50,30 +54,30 @@ public final class ThreadSystemLoad extends TimerTask {
 			return 1;
 		}
 	}
-	
-	private final boolean allowFromOriginX(final int limitOfUsesOfOrigin, final UsesOfOrigin usesOfOrigin, final long timeToResetMS) {
-		return limitOfUsesOfOrigin < 0 || usesOfOrigin.getUsesAndTryReset(timeToResetMS) < limitOfUsesOfOrigin;
+
+	private final boolean allowFromOriginX(final int limitOfUsesOfOrigin, final UsesOfOrigin usesOfOrigin) {
+		return limitOfUsesOfOrigin < 0 || usesOfOrigin.getUses() < limitOfUsesOfOrigin;
 	}
 
-	private final void printAllFrom(final Map<String, BundleOfUses> map, final long timeToResetMS) {
+	private final void printAllFrom(final Map<String, BundleOfUses> map) {
 		LOG.info("------------------------------ printAllFrom ------------------------------");
 		map.forEach((final String origin4of4, final BundleOfUses bundleOfUses) -> {
 			String info = "";
 			info += origin4of4;
-			info += " (" + bundleOfUses.usesOfOrigin1of4.getUsesAndTryReset(timeToResetMS);
-			info += " | " + bundleOfUses.usesOfOrigin2of4.getUsesAndTryReset(timeToResetMS);
-			info += " | " + bundleOfUses.usesOfOrigin3of4.getUsesAndTryReset(timeToResetMS);
-			info += " | " + bundleOfUses.usesOfOrigin4of4.getUsesAndTryReset(timeToResetMS);
+			info += " (" + bundleOfUses.usesOfOrigin1of4.getUses();
+			info += " | " + bundleOfUses.usesOfOrigin2of4.getUses();
+			info += " | " + bundleOfUses.usesOfOrigin3of4.getUses();
+			info += " | " + bundleOfUses.usesOfOrigin4of4.getUses();
 			info += ")";
 			LOG.info(info);
 		});
 	}
 
 	private final void updateTimeToResetMS() {
-		printAllFrom(mapBundleOfUsesByOrigin4of4, timeToResetMS);
+		printAllFrom(mapBundleOfUsesByOrigin4of4);
 		if (System.currentTimeMillis() >= timeToResetMS) {
 			timeToResetMS = System.currentTimeMillis() + intervalToResetMS;
-			LOG.info("RESETED");
+			LOG.info("------------------------------ !!! UPDATED TIME TO RESET !!! ------------------------------");
 		}
 	}
 
@@ -156,8 +160,8 @@ public final class ThreadSystemLoad extends TimerTask {
 	private final void doRunner() {
 		final long timeToResetMS = this.timeToResetMS;
 
-		final int indexToReach = this.indexToReach.get();
-		while (indexRunner != indexToReach) {
+		final int indexHost = this.indexHost.get();
+		while (indexRunner != indexHost) {
 			doWriteOfUse(listHost[indexRunner], timeToResetMS);
 
 			if (++indexRunner >= limitListHost)
@@ -166,19 +170,14 @@ public final class ThreadSystemLoad extends TimerTask {
 	}
 
 	public ThreadSystemLoad(
-			final AtomicInteger indexHost,
-			final String[] listHost,
-			final Map<String, BundleOfUses> mapBundleOfUsesByOrigin4of4,
 			final long intervalToResetMS,
 			final int[][] mapLimitOfUsesByOriginByLoadLevel) {
-		this.indexToReach = indexHost;
-		indexRunner = indexHost.get();
-		this.listHost = listHost;
-		limitListHost = listHost.length;
-
-		this.mapBundleOfUsesByOrigin4of4 = mapBundleOfUsesByOrigin4of4;
 		this.intervalToResetMS = intervalToResetMS;
 		this.mapLimitOfUsesByOriginByLoadLevel = mapLimitOfUsesByOriginByLoadLevel;
+	}
+
+	public final void addHost(final String host) {
+		listHost[indexHost.getAndUpdate(updateFunctionIndexHost)] = host;
 	}
 
 	@Override
@@ -203,30 +202,44 @@ public final class ThreadSystemLoad extends TimerTask {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}	
+	}
 
+	/**
+	 * Asynchronous and Multithreading.
+	 * 
+	 * @param host
+	 * @return
+	 */
 	public final boolean allowFromOrigins1234(final String host) {
 		final int loadLevel = getLoadLevel();
 		if (loadLevel == 0) // policy
 			return true;
 
-		final long timeToResetMS = this.timeToResetMS;
-
 		final BundleOfUses bundleOfUses = mapBundleOfUsesByOrigin4of4.get(host);
 		if (bundleOfUses == null)
 			return true;
 
-		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[3][loadLevel], bundleOfUses.usesOfOrigin4of4, timeToResetMS))
+		LOG.info(">>>>>>>>> RETURN ALLOWED FROM ORIGINS 1, 2, 3, 4 >>>>>>>>>");
+
+		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[3][loadLevel], bundleOfUses.usesOfOrigin4of4))
 			return false;
 
-		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[2][loadLevel], bundleOfUses.usesOfOrigin3of4, timeToResetMS))
+		LOG.info("ALLOWED FROM ORIGIN 4of4");
+
+		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[2][loadLevel], bundleOfUses.usesOfOrigin3of4))
 			return false;
 
-		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[1][loadLevel], bundleOfUses.usesOfOrigin2of4, timeToResetMS))
+		LOG.info("ALLOWED FROM ORIGIN 3of4");
+
+		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[1][loadLevel], bundleOfUses.usesOfOrigin2of4))
 			return false;
 
-		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[0][loadLevel], bundleOfUses.usesOfOrigin1of4, timeToResetMS))
+		LOG.info("ALLOWED FROM ORIGIN 2of4");
+
+		if (!allowFromOriginX(mapLimitOfUsesByOriginByLoadLevel[0][loadLevel], bundleOfUses.usesOfOrigin1of4))
 			return false;
+
+		LOG.info("ALLOWED FROM ORIGIN 1of4");
 
 		return true;
 	}

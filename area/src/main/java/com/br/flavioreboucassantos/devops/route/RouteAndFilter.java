@@ -3,11 +3,7 @@ package com.br.flavioreboucassantos.devops.route;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Timer;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.IntUnaryOperator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,35 +31,27 @@ public final class RouteAndFilter {
 	/*
 	 * Filter
 	 */
-
 	private ThreadSystemLoad threadSystemLoad;
 	private Timer timerThreadSystemLoad;
 
-	private final AtomicInteger indexHost = new AtomicInteger(0);
-	private final int limitListHost = 10 * 1000;
-	private final String[] listHost = new String[limitListHost];
-
-	private final IntUnaryOperator updateFunctionIndexHost = i -> (++i >= limitListHost || i < 0) ? 0 : i;
-
 	private final long intervalToThreadSystemLoadMS = 1 * 1000;
-	private final long intervalToResetMS = 3 * 1000;
-	private final Map<String, BundleOfUses> mapBundleOfUsesByOrigin4of4 = new LinkedHashMap<String, BundleOfUses>();
+	private final long intervalToResetMS = 20 * 1000;
 
 	private final int[][] mapLimitOfUsesByOriginByLoadLevel = {
 			// [0][] = Origin 1 of 4
 			{
 					-1, // [0][0] Load Level 0
-					70 // [0][1] Load Level 1
+					7 // [0][1] Load Level 1
 			},
 			// [1][] = Origin 2 of 4
 			{
 					-1, // [1][0] Load Level 0
-					70 // [1][1] Load Level 1
+					7 // [1][1] Load Level 1
 			},
 			// [2][] = Origin 3 of 4
 			{
 					-1, // [2][0] Load Level 0
-					70 // [2][1] Load Level 1
+					7 // [2][1] Load Level 1
 			},
 			// [3][] = Origin 4 of 4
 			{
@@ -71,6 +59,8 @@ public final class RouteAndFilter {
 					7 // [3][1] Load Level 1
 			},
 	};
+
+	private int simulationMassiveStep = 0;
 
 	/*
 	 * Static Resource
@@ -81,10 +71,9 @@ public final class RouteAndFilter {
 	private final String fileContent;
 
 //	System.out.println(x);
-//	int counter;
 	private final void addHost(final String host) {
 		LOG.info(host);
-		listHost[indexHost.getAndUpdate(updateFunctionIndexHost)] = host;
+		threadSystemLoad.addHost(host);
 	}
 
 	private final void walkForAddHost(int[] test1of, int[] test2of, int[] test3of, int[] test4of) {
@@ -104,43 +93,89 @@ public final class RouteAndFilter {
 			walkForAddHost(test1of, test2of, test3of, test4of);
 	}
 
-	private final void simulationMassiveAllowed(final RoutingContext rc) {
-		LOG.info("simulationMassiveAllowed");
+	private final void forAddHost(int repetition, int i1of, int i2of, int i3of, int i4of) {
+		for (int i = 0; i < repetition; i++)
+			addHost(i1of + "." + i2of + "." + i3of + "." + i4of);
+	}
 
-		/*
-		 * add host
-		 */
-		final int testStep = this.testStep++ % 3;
-		LOG.info("testStep: " + testStep);
-		switch (testStep) {
+	private final void simulationMassiveRequest_1() {
+		LOG.info("simulationMassiveRequest_1: imply DENY from 4of4");
+
+		final int simulationMassiveStep = this.simulationMassiveStep++;
+
+		LOG.info("STEP: " + simulationMassiveStep);
+
+		switch (simulationMassiveStep) {
 		case 0:
-			walkForAddHost(3, new int[] { 127, 0 }, new int[] { 0, 0 }, new int[] { 0, 0 }, new int[] { 1, 0 });
+			forAddHost(7, 127, 0, 0, 1); // major (7 | 7 | 7 | 7) = imply DENY from 4of4
 			break;
-		case 1:
-			walkForAddHost(new int[] { 255, 0 }, new int[] { 0, 0 }, new int[] { 0, 0 }, new int[] { 1, 0 });
-			break;
-		case 2:
-			walkForAddHost(new int[] { 127, 0 }, new int[] { 0, 0 }, new int[] { 0, 0 }, new int[] { 1, 0 });
+		default:
+			forAddHost(1, 127, 0, 0, 1); // validation
 			break;
 		}
-
-		/*
-		 * next
-		 */
-		rc.next();
 	}
 
-	private final void simulationAllowed(final RoutingContext rc, final String host) {
-		LOG.info("simulationAllowed");
-		addHost(host);
-		rc.next();
+	private final void simulationMassiveRequest_2() {
+		LOG.info("simulationMassiveRequest_2: imply DENY from 3of4");
+
+		final int simulationMassiveStep = this.simulationMassiveStep++;
+
+		LOG.info("STEP: " + simulationMassiveStep);
+
+		switch (simulationMassiveStep) {
+		case 0:
+			forAddHost(6, 127, 0, 0, 1); // major (6 | 6 | 6 | 6) = imply ALLOW from 1234
+			break;
+		case 1:
+			forAddHost(1, 127, 0, 0, 255); // major (7 | 7 | 7 | 6) = imply DENY from 3of4
+			break;
+		default:
+			forAddHost(1, 127, 0, 0, 1); // validation
+			break;
+		}
 	}
 
-	private final void simulationDenied(final RoutingContext rc) {
-		LOG.info("simulationDenied");
-		final HttpServerResponse response = rc.response();
-		response.setStatusCode(Response.Status.TOO_MANY_REQUESTS.getStatusCode());
-		rc.end();
+	private final void simulationMassiveRequest_3() {
+		LOG.info("simulationMassiveRequest_3: imply DENY from 2of4");
+
+		final int simulationMassiveStep = this.simulationMassiveStep++;
+
+		LOG.info("STEP: " + simulationMassiveStep);
+
+		switch (simulationMassiveStep) {
+		case 0:
+			forAddHost(5, 127, 0, 0, 1);
+			forAddHost(1, 127, 0, 0, 255); // major (6 | 6 | 6 | 5) = imply ALLOW from 1234
+			break;
+		case 1:
+			forAddHost(1, 127, 0, 255, 255); // major (7 | 7 | 6 | 5) = imply DENY from 2of4
+			break;
+		default:
+			forAddHost(1, 127, 0, 0, 1); // validation
+			break;
+		}
+	}
+
+	private final void simulationMassiveRequest_4() {
+		LOG.info("simulationMassiveRequest_4: imply DENY from 1of4");
+
+		final int simulationMassiveStep = this.simulationMassiveStep++;
+
+		LOG.info("STEP: " + simulationMassiveStep);
+
+		switch (simulationMassiveStep) {
+		case 0:
+			forAddHost(4, 127, 0, 0, 1);
+			forAddHost(1, 127, 0, 0, 255);
+			forAddHost(1, 127, 0, 255, 255); // major (6 | 6 | 5 | 4) = imply ALLOW from 1234
+			break;
+		case 1:
+			forAddHost(1, 127, 255, 255, 255); // major (7 | 6 | 5 | 4) = imply DENY from 1of4
+			break;
+		default:
+			forAddHost(1, 127, 0, 0, 1); // validation
+			break;
+		}
 	}
 
 	private final void simulation(final RoutingContext rc) {
@@ -148,11 +183,19 @@ public final class RouteAndFilter {
 
 		final String host = remoteAddress.host();
 
+//		simulationMassiveRequest_1();
+//		simulationMassiveRequest_2();
+//		simulationMassiveRequest_3();
+		simulationMassiveRequest_4();
+
+//		addHost(host);
+
 		if (threadSystemLoad.allowFromOrigins1234(host)) {
-//			simulationMassiveAllowed(rc);
-			simulationAllowed(rc, host);
+			rc.next();
 		} else {
-			simulationDenied(rc);
+			final HttpServerResponse response = rc.response();
+			response.setStatusCode(Response.Status.TOO_MANY_REQUESTS.getStatusCode());
+			rc.end();
 		}
 	}
 
@@ -162,7 +205,7 @@ public final class RouteAndFilter {
 
 	public final void onStart(@Observes StartupEvent ev) {
 		// (!) The Live Reload will not destroy this thread.
-		threadSystemLoad = new ThreadSystemLoad(indexHost, listHost, mapBundleOfUsesByOrigin4of4, intervalToResetMS, mapLimitOfUsesByOriginByLoadLevel);
+		threadSystemLoad = new ThreadSystemLoad(intervalToResetMS, mapLimitOfUsesByOriginByLoadLevel);
 		timerThreadSystemLoad = new Timer();
 		timerThreadSystemLoad.schedule(threadSystemLoad, intervalToThreadSystemLoadMS, intervalToThreadSystemLoadMS);
 	}
@@ -182,8 +225,6 @@ public final class RouteAndFilter {
 	public final void pathAnyVr(final RoutingExchange ex) throws IOException {
 		ex.ok(fileContent);
 	}
-
-	int testStep = 0;
 
 	@RouteFilter(100)
 	public final void myFilter(final RoutingContext rc) {

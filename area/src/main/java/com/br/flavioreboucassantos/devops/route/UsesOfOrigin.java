@@ -26,4 +26,8 @@ public final class UsesOfOrigin {
 		}
 		return uses;
 	}
+
+	public final int getUses() {
+		return uses;
+	}
 }
