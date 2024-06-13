@@ -7,17 +7,18 @@ public final class UsesOfOrigin {
 
 	private long timeToResetMS = Long.MIN_VALUE;
 
-	public int uses = 1; // first use
+	private int uses = 0;
 
-	public UsesOfOrigin(final long timeToResetMS) {
-		this.timeToResetMS = timeToResetMS;
-	}
-
-	final public UsesOfOrigin tryReset(final long timeToResetMS) {
+	final public UsesOfOrigin incrementAndTryReset(final long timeToResetMS) {
 		if (timeToResetMS > this.timeToResetMS) {
-			uses = 0;
 			this.timeToResetMS = timeToResetMS;
-		}
+			uses = 1;			
+		} else
+			uses++;
 		return this;
+	}
+	
+	final public int getUses() {
+		return uses;
 	}
 }

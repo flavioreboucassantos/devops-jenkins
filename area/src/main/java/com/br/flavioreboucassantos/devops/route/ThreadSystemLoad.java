@@ -50,7 +50,7 @@ public class ThreadSystemLoad extends TimerTask {
 
 	private final UsesOfOrigin prepareAndGetItem(final UsesOfOrigin[] map, final int origin) {
 		if (map[origin] == null) {
-			final UsesOfOrigin newItem = new UsesOfOrigin(timeToResetMS);
+			final UsesOfOrigin newItem = new UsesOfOrigin();
 			map[origin] = newItem;
 			return newItem;
 		} else
@@ -99,10 +99,10 @@ public class ThreadSystemLoad extends TimerTask {
 		if (mapBundleOfUsesByOrigin4of4.containsKey(origin4of4)) {
 			final BundleOfUses bundleOfUses = mapBundleOfUsesByOrigin4of4.get(origin4of4);
 
-			bundleOfUses.usesOfOrigin1of4.tryReset(timeToResetMS).uses++;
-			bundleOfUses.usesOfOrigin2of4.tryReset(timeToResetMS).uses++;
-			bundleOfUses.usesOfOrigin3of4.tryReset(timeToResetMS).uses++;
-			bundleOfUses.usesOfOrigin4of4.tryReset(timeToResetMS).uses++;
+			bundleOfUses.usesOfOrigin1of4.incrementAndTryReset(timeToResetMS);
+			bundleOfUses.usesOfOrigin2of4.incrementAndTryReset(timeToResetMS);
+			bundleOfUses.usesOfOrigin3of4.incrementAndTryReset(timeToResetMS);
+			bundleOfUses.usesOfOrigin4of4.incrementAndTryReset(timeToResetMS);
 
 		} else {
 			final String[] origins123 = origin4of4.split("\\.");
@@ -110,10 +110,10 @@ public class ThreadSystemLoad extends TimerTask {
 			final int origin2of4 = Integer.valueOf(origins123[1]);
 			final int origin3of4 = Integer.valueOf(origins123[2]);
 
-			final UsesOfOrigin usesOfOrigin1of4 = getUsesOfOrigin(origin1of4).tryReset(timeToResetMS);
-			final UsesOfOrigin usesOfOrigin2of4 = getUsesOfOrigin(origin1of4, origin2of4).tryReset(timeToResetMS);
-			final UsesOfOrigin usesOfOrigin3of4 = getUsesOfOrigin(origin1of4, origin2of4, origin3of4).tryReset(timeToResetMS);
-			final UsesOfOrigin usesOfOrigin4of4 = new UsesOfOrigin(timeToResetMS);
+			final UsesOfOrigin usesOfOrigin1of4 = getUsesOfOrigin(origin1of4).incrementAndTryReset(timeToResetMS);
+			final UsesOfOrigin usesOfOrigin2of4 = getUsesOfOrigin(origin1of4, origin2of4).incrementAndTryReset(timeToResetMS);
+			final UsesOfOrigin usesOfOrigin3of4 = getUsesOfOrigin(origin1of4, origin2of4, origin3of4).incrementAndTryReset(timeToResetMS);
+			final UsesOfOrigin usesOfOrigin4of4 = new UsesOfOrigin().incrementAndTryReset(timeToResetMS);
 
 			mapBundleOfUsesByOrigin4of4.put(origin4of4, new BundleOfUses(usesOfOrigin1of4, usesOfOrigin2of4, usesOfOrigin3of4, usesOfOrigin4of4));
 		}
@@ -121,10 +121,10 @@ public class ThreadSystemLoad extends TimerTask {
 		final BundleOfUses bundleOfUses = mapBundleOfUsesByOrigin4of4.get(origin4of4);
 		String info = "";
 		info += origin4of4;
-		info += " | " + bundleOfUses.usesOfOrigin1of4.uses;
-		info += " | " + bundleOfUses.usesOfOrigin2of4.uses;
-		info += " | " + bundleOfUses.usesOfOrigin3of4.uses;
-		info += " | " + bundleOfUses.usesOfOrigin4of4.uses;
+		info += " | " + bundleOfUses.usesOfOrigin1of4.getUses();
+		info += " | " + bundleOfUses.usesOfOrigin2of4.getUses();
+		info += " | " + bundleOfUses.usesOfOrigin3of4.getUses();
+		info += " | " + bundleOfUses.usesOfOrigin4of4.getUses();
 		System.out.println(info);
 	}
 

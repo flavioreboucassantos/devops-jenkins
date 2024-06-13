@@ -56,6 +56,9 @@ public final class RouteAndFilter {
 	private final void addHost(final String host) {
 		listHost[indexHost.getAndUpdate(updateFunctionIndexHost)] = host;
 	}
+	
+	private final void testAddHost(int[] test1of, int[] test2of, int[] test3of, int[] test4of) {		
+	}
 
 	public RouteAndFilter() throws IOException {
 		fileContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
