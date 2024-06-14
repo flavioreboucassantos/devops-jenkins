@@ -16,18 +16,19 @@ import org.slf4j.LoggerFactory;
  */
 public final class ThreadSystemLoad extends TimerTask {
 
+	private final Logger LOG = LoggerFactory.getLogger(ThreadSystemLoad.class);
+
 	/**
 	 * System Information
 	 */
-	static public final Runtime runtime = Runtime.getRuntime();
-	static public final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+	private final Runtime runtime = Runtime.getRuntime();
+	private final OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 
-	static public final long maxMemory = runtime.maxMemory();
-	static public final long totalMemory = runtime.totalMemory();
-	static public long freeMemory;
-	static public double systemLoadAverage;
-
-	private final Logger LOG = LoggerFactory.getLogger(ThreadSystemLoad.class);
+	private final long maxMemory = runtime.maxMemory();
+	private final long totalMemory = runtime.totalMemory();
+	private long freeMemory;
+	private double systemLoadAverage;
+	private int loadLevel;
 
 	/**
 	 * 
@@ -51,11 +52,11 @@ public final class ThreadSystemLoad extends TimerTask {
 	private final UsesOfOrigin[][][] mapUsesOfOriginByOrigin3of4 = new UsesOfOrigin[256][256][256];
 	private final Map<String, BundleOfUses> mapBundleOfUsesByOrigin4of4 = new LinkedHashMap<String, BundleOfUses>();
 
-	private final int getLoadLevel() {
+	private final void setLoadLevel(final double systemLoadAverage) {
 		if (systemLoadAverage <= 50) {
-			return 1;
+			loadLevel = 1;
 		} else {
-			return 1;
+			loadLevel = 1;
 		}
 	}
 
@@ -226,12 +227,14 @@ public final class ThreadSystemLoad extends TimerTask {
 			freeMemory = runtime.freeMemory();
 
 			systemLoadAverage = operatingSystemMXBean.getSystemLoadAverage();
+			setLoadLevel(systemLoadAverage);
 
-			String info = "";
-			info += "maxMemory: " + String.valueOf(maxMemory);
-			info += " | totalMemory: " + String.valueOf(totalMemory);
-			info += " | freeMemory: " + String.valueOf(freeMemory);
-			info += " | systemLoadAverage: " + String.valueOf(systemLoadAverage);
+//			String info = "";
+//			info += "maxMemory: " + String.valueOf(maxMemory);
+//			info += " | totalMemory: " + String.valueOf(totalMemory);
+//			info += " | freeMemory: " + String.valueOf(freeMemory);
+//			info += " | systemLoadAverage: " + String.valueOf(systemLoadAverage);
+//			info += " | loadLevel: " + String.valueOf(loadLevel);
 
 //			//LOG.info(info);
 
@@ -248,7 +251,7 @@ public final class ThreadSystemLoad extends TimerTask {
 	 * @return
 	 */
 	public final boolean allowUseFromOrigins1234(final String host, final int[][] mapLimitOfUses) {
-		final int loadLevel = getLoadLevel();
+		final int loadLevel = this.loadLevel;
 		if (loadLevel == 0) // policy
 			return true;
 
