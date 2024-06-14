@@ -202,9 +202,9 @@ public final class RouteAndFilter {
 //		simulationMassiveRequest_1();
 //		simulationMassiveRequest_2();
 //		simulationMassiveRequest_3();
-		simulationMassiveRequest_4();
+//		simulationMassiveRequest_4();
 
-//		addHostHeavyUse(host);
+		addHostHeavyUse(host);
 
 		if (threadSystemLoad.allowUseFromOrigins1234(host, mapLimitOfUsesByOriginByLoadLevel)) {
 			rc.next();
