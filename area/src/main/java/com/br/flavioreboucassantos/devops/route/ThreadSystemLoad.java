@@ -44,9 +44,7 @@ public final class ThreadSystemLoad extends TimerTask {
 	private final String[] listHostHeavyUse = new String[limitListHostHeavyUse];
 	private final IntUnaryOperator updateFunctionIndexHostHeavyUse = i -> (++i >= limitListHostHeavyUse || i < 0) ? 0 : i;
 
-	private final int[][] mapLimitOfUsesByOriginByLoadLevel;
 	private final long intervalToResetMS;
-	final int weightHeavyUse;
 	private long timeToResetMS = Long.MIN_VALUE;
 	private final UsesOfOrigin[] mapUsesOfOriginByOrigin1of4 = new UsesOfOrigin[256];
 	private final UsesOfOrigin[][] mapUsesOfOriginByOrigin2of4 = new UsesOfOrigin[256][256];
@@ -204,10 +202,8 @@ public final class ThreadSystemLoad extends TimerTask {
 		}
 	}
 
-	public ThreadSystemLoad(final long intervalToResetMS, final int[][] mapLimitOfUsesByOriginByLoadLevel, final int weightHeavyUse) {
+	public ThreadSystemLoad(final long intervalToResetMS) {
 		this.intervalToResetMS = intervalToResetMS;
-		this.mapLimitOfUsesByOriginByLoadLevel = mapLimitOfUsesByOriginByLoadLevel;
-		this.weightHeavyUse = weightHeavyUse;
 	}
 
 	public final void addHostLightUse(final String host) {
@@ -251,7 +247,7 @@ public final class ThreadSystemLoad extends TimerTask {
 	 * @param mapLimitOfUses
 	 * @return
 	 */
-	public final boolean allowWeightFromOrigins1234(final String host, final int[][] mapLimitOfUses) {
+	public final boolean allowUseFromOrigins1234(final String host, final int[][] mapLimitOfUses) {
 		final int loadLevel = getLoadLevel();
 		if (loadLevel == 0) // policy
 			return true;
@@ -283,15 +279,5 @@ public final class ThreadSystemLoad extends TimerTask {
 		// LOG.info("ALLOWED FROM ORIGIN 1of4");
 
 		return true;
-	}
-
-	/**
-	 * Asynchronous and Multithreading.
-	 * 
-	 * @param host
-	 * @return
-	 */
-	public final boolean allowWeightFromOrigins1234(final String host) {
-		return allowWeightFromOrigins1234(host, mapLimitOfUsesByOriginByLoadLevel);
 	}
 }

@@ -36,7 +36,7 @@ public final class RouteAndFilter {
 	private Timer timerThreadSystemLoad;
 
 	private final long intervalToThreadSystemLoadMS = 1 * 1000;
-	private final long intervalToResetMS = 5 * 1000;
+	private final long intervalToResetMS = 50 * 1000;
 
 	private final int[][] mapLimitOfUsesByOriginByLoadLevel = {
 			// [0][] = Origin 1 of 4
@@ -182,12 +182,12 @@ public final class RouteAndFilter {
 		}
 	}
 
-	private final void filterLight(final RoutingContext rc) {
+	private final void filterLight(final RoutingContext rc, final int[][] mapLimitOfUsesByOriginByLoadLevel) {
 		final String host = rc.request().remoteAddress().host();
 
 		addHostLightUse(host);
 
-		if (threadSystemLoad.allowWeightFromOrigins1234(host)) {
+		if (threadSystemLoad.allowUseFromOrigins1234(host, mapLimitOfUsesByOriginByLoadLevel)) {
 			rc.next();
 		} else {
 			final HttpServerResponse response = rc.response();
@@ -196,17 +196,17 @@ public final class RouteAndFilter {
 		}
 	}
 
-	private final void filterHeavy(final RoutingContext rc) {
+	private final void filterHeavy(final RoutingContext rc, final int[][] mapLimitOfUsesByOriginByLoadLevel) {
 		final String host = rc.request().remoteAddress().host();
 
 //		simulationMassiveRequest_1();
 //		simulationMassiveRequest_2();
 //		simulationMassiveRequest_3();
-//		simulationMassiveRequest_4();
+		simulationMassiveRequest_4();
 
-		addHostHeavyUse(host);
+//		addHostHeavyUse(host);
 
-		if (threadSystemLoad.allowWeightFromOrigins1234(host)) {
+		if (threadSystemLoad.allowUseFromOrigins1234(host, mapLimitOfUsesByOriginByLoadLevel)) {
 			rc.next();
 		} else {
 			final HttpServerResponse response = rc.response();
@@ -225,7 +225,7 @@ public final class RouteAndFilter {
 
 	public final void onStart(@Observes StartupEvent ev) {
 		// (!) The Live Reload will not destroy this thread.
-		threadSystemLoad = new ThreadSystemLoad(intervalToResetMS, mapLimitOfUsesByOriginByLoadLevel, weightHeavyUse);
+		threadSystemLoad = new ThreadSystemLoad(intervalToResetMS);
 		timerThreadSystemLoad = new Timer();
 		timerThreadSystemLoad.schedule(threadSystemLoad, intervalToThreadSystemLoadMS, intervalToThreadSystemLoadMS);
 	}
@@ -258,9 +258,9 @@ public final class RouteAndFilter {
 
 		final String pathParam = rc.pathParams().get("*");
 		if (pathParam.isEmpty() || !pathParam.startsWith("api")) {
-			filterLight(rc);
+			filterLight(rc, mapLimitOfUsesByOriginByLoadLevel);
 		} else
-			filterHeavy(rc);
+			filterHeavy(rc, mapLimitOfUsesByOriginByLoadLevel);
 	}
 
 }

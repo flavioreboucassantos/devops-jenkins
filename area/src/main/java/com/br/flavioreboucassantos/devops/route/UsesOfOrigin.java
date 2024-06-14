@@ -27,15 +27,6 @@ public final class UsesOfOrigin {
 		return this;
 	}
 
-	public final int getUsesAndTryReset(final long timeToResetMS) {
-		if (timeToResetMS > this.timeToResetMS) {
-			this.timeToResetMS = timeToResetMS;
-			uses = 0;
-			return 0;
-		}
-		return uses;
-	}
-
 	public final int getUses() {
 		return uses;
 	}
