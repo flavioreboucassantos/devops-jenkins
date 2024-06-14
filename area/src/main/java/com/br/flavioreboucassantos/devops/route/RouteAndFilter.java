@@ -36,7 +36,7 @@ public final class RouteAndFilter {
 	private Timer timerThreadSystemLoad;
 
 	private final long intervalToThreadSystemLoadMS = 1 * 1000;
-	private final long intervalToResetMS = 50 * 1000;
+	private final long intervalToResetMS = 10 * 1000;
 
 	private final int[][] mapLimitOfUsesByOriginByLoadLevel = {
 			// [0][] = Origin 1 of 4
