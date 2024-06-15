@@ -19,4 +19,12 @@ public final class BundleOfUses {
 		this.usesOfOrigin3of4 = usesOfOrigin3of4;
 		this.usesOfOrigin4of4 = usesOfOrigin4of4;
 	}
+
+	public final void reset(final long timeToResetMS) {
+		usesOfOrigin1of4.reset(timeToResetMS);
+		usesOfOrigin2of4.reset(timeToResetMS);
+		usesOfOrigin3of4.reset(timeToResetMS);
+		usesOfOrigin4of4.reset(timeToResetMS);
+	}
+
 }

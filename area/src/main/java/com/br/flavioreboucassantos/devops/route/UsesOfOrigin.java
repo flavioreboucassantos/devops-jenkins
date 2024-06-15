@@ -30,4 +30,9 @@ public final class UsesOfOrigin {
 	public final int getUses() {
 		return uses;
 	}
+
+	public void reset(final long timeToResetMS) {
+		this.timeToResetMS = timeToResetMS;
+		uses = 0;
+	}
 }

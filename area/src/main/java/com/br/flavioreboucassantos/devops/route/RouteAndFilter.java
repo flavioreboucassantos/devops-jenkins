@@ -72,12 +72,16 @@ public final class RouteAndFilter {
 	private final String fileContent;
 
 //	System.out.println(x);
-	private final void addHostLightUse(final String host) {
-		threadSystemLoad.addHostLightUse(host);
+	private final void addAllowedHostLightUse(final String host) {
+		threadSystemLoad.addAllowedHostLightUse(host);
 	}
 
-	private final void addHostHeavyUse(final String host) {
-		threadSystemLoad.addHostHeavyUse(host);
+	private final void addAllowedHostHeavyUse(final String host) {
+		threadSystemLoad.addAllowedHostHeavyUse(host);
+	}
+
+	private final void setDeniedHost(final String host) {
+		threadSystemLoad.setDeniedHost(host);
 	}
 
 	private final void walkForAddHost(int[] test1of, int[] test2of, int[] test3of, int[] test4of) {
@@ -85,7 +89,7 @@ public final class RouteAndFilter {
 			for (int i2of = test2of[0]; i2of <= test2of[0] + test2of[1]; i2of++) {
 				for (int i3of = test3of[0]; i3of <= test3of[0] + test3of[1]; i3of++) {
 					for (int i4of = test4of[0]; i4of <= test4of[0] + test4of[1]; i4of++) {
-						addHostHeavyUse(i1of + "." + i2of + "." + i3of + "." + i4of);
+						addAllowedHostHeavyUse(i1of + "." + i2of + "." + i3of + "." + i4of);
 					}
 				}
 			}
@@ -99,7 +103,7 @@ public final class RouteAndFilter {
 
 	private final void forAddHost(int repetition, int i1of, int i2of, int i3of, int i4of) {
 		for (int i = 0; i < repetition; i++)
-			addHostHeavyUse(i1of + "." + i2of + "." + i3of + "." + i4of);
+			addAllowedHostHeavyUse(i1of + "." + i2of + "." + i3of + "." + i4of);
 	}
 
 	private final void simulationMassiveRequest_1() {
@@ -134,7 +138,7 @@ public final class RouteAndFilter {
 			forAddHost(1, 127, 0, 0, 255); // major (35 | 35 | 35 | 30) = imply DENY from 3of4
 			break;
 		default:
-			forAddHost(1, 127, 0, 0, 1); // validation
+			forAddHost(1, 127, 0, 0, 255); // validation
 			break;
 		}
 	}
@@ -185,11 +189,13 @@ public final class RouteAndFilter {
 	private final void filterLight(final RoutingContext rc, final int[][] mapLimitOfUsesByOriginByLoadLevel) {
 		final String host = rc.request().remoteAddress().host();
 
-		addHostLightUse(host);
-
 		if (threadSystemLoad.allowUseFromOrigins1234(host, mapLimitOfUsesByOriginByLoadLevel)) {
+			addAllowedHostLightUse(host);
+
 			rc.next();
 		} else {
+			setDeniedHost(host); // NOT SIMULATION
+
 			final HttpServerResponse response = rc.response();
 			response.setStatusCode(Response.Status.TOO_MANY_REQUESTS.getStatusCode());
 			rc.end();
@@ -199,16 +205,18 @@ public final class RouteAndFilter {
 	private final void filterHeavy(final RoutingContext rc, final int[][] mapLimitOfUsesByOriginByLoadLevel) {
 		final String host = rc.request().remoteAddress().host();
 
-//		simulationMassiveRequest_1();
-//		simulationMassiveRequest_2();
-//		simulationMassiveRequest_3();
-//		simulationMassiveRequest_4();
-
-		addHostHeavyUse(host);
-
 		if (threadSystemLoad.allowUseFromOrigins1234(host, mapLimitOfUsesByOriginByLoadLevel)) {
+//			simulationMassiveRequest_1();
+//			simulationMassiveRequest_2();
+//			simulationMassiveRequest_3();
+//			simulationMassiveRequest_4();
+
+			addAllowedHostHeavyUse(host);
+
 			rc.next();
 		} else {
+			setDeniedHost(host); // NOT SIMULATION
+
 			final HttpServerResponse response = rc.response();
 			response.setStatusCode(Response.Status.TOO_MANY_REQUESTS.getStatusCode());
 			rc.end();

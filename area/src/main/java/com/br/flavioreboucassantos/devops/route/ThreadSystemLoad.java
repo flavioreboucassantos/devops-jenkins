@@ -2,9 +2,9 @@ package com.br.flavioreboucassantos.devops.route;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntUnaryOperator;
 
@@ -33,24 +33,26 @@ public final class ThreadSystemLoad extends TimerTask {
 	/**
 	 * 
 	 */
-	private final AtomicInteger indexHostLightUse = new AtomicInteger(0);
-	private int indexRunnerLightUse;
+	private final AtomicInteger indexProducerLightUse = new AtomicInteger(0);
+	private int indexConsumerLightUse;
 	private final int limitListHostLightUse = 10 * 1000;
 	private final String[] listHostLightUse = new String[limitListHostLightUse];
-	private final IntUnaryOperator updateFunctionIndexHostLightUse = i -> (++i >= limitListHostLightUse || i < 0) ? 0 : i;
+	private final IntUnaryOperator updateFunctionIndexProducerLightUse = i -> (++i >= limitListHostLightUse || i < 0) ? 0 : i;
 
-	private final AtomicInteger indexHostHeavyUse = new AtomicInteger(0);
-	private int indexRunnerHeavyUse;
+	private final AtomicInteger indexProducerHeavyUse = new AtomicInteger(0);
+	private int indexConsumerHeavyUse;
 	private final int limitListHostHeavyUse = 10 * 1000;
 	private final String[] listHostHeavyUse = new String[limitListHostHeavyUse];
-	private final IntUnaryOperator updateFunctionIndexHostHeavyUse = i -> (++i >= limitListHostHeavyUse || i < 0) ? 0 : i;
+	private final IntUnaryOperator updateFunctionIndexProducerHeavyUse = i -> (++i >= limitListHostHeavyUse || i < 0) ? 0 : i;
 
 	private final long intervalToResetMS;
 	private long timeToResetMS = Long.MIN_VALUE;
 	private final UsesOfOrigin[] mapUsesOfOriginByOrigin1of4 = new UsesOfOrigin[256];
 	private final UsesOfOrigin[][] mapUsesOfOriginByOrigin2of4 = new UsesOfOrigin[256][256];
 	private final UsesOfOrigin[][][] mapUsesOfOriginByOrigin3of4 = new UsesOfOrigin[256][256][256];
-	private final Map<String, BundleOfUses> mapBundleOfUsesByOrigin4of4 = new LinkedHashMap<String, BundleOfUses>();
+	private final Map<String, BundleOfUses> mapBundleOfUsesByOrigin4of4 = new ConcurrentHashMap<String, BundleOfUses>();
+
+	private final Map<String, BundleOfUses> mapDeniedHostByOrigin4of4 = new ConcurrentHashMap<String, BundleOfUses>();
 
 	private final void setLoadLevel(final double systemLoadAverage) {
 		if (systemLoadAverage <= 50) {
@@ -62,6 +64,12 @@ public final class ThreadSystemLoad extends TimerTask {
 
 	private final boolean allowFromOriginX(final int limitOfUsesOfOrigin, final UsesOfOrigin usesOfOrigin) {
 		return limitOfUsesOfOrigin < 0 || usesOfOrigin.getUses() < limitOfUsesOfOrigin;
+	}
+
+	private final void updateTimeToResetOfDeniedHost(final long timeToResetMS) {
+//		LOG.info("FOUND " + mapDeniedHostByOrigin4of4.size() + " DENIED HOST(S)");
+		mapDeniedHostByOrigin4of4.entrySet().forEach(e -> e.getValue().reset(timeToResetMS));
+		mapDeniedHostByOrigin4of4.clear();
 	}
 
 	private final void printAllFrom(final Map<String, BundleOfUses> map) {
@@ -82,7 +90,8 @@ public final class ThreadSystemLoad extends TimerTask {
 //		printAllFrom(mapBundleOfUsesByOrigin4of4);
 		if (System.currentTimeMillis() >= timeToResetMS) {
 			timeToResetMS = System.currentTimeMillis() + intervalToResetMS;
-//			LOG.info("------------------------------ !!! UPDATED TIME TO RESET !!! ------------------------------");
+			updateTimeToResetOfDeniedHost(timeToResetMS);
+//			LOG.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! --- UPDATED TIME TO RESET --- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		}
 	}
 
@@ -177,29 +186,29 @@ public final class ThreadSystemLoad extends TimerTask {
 		}
 	}
 
-	private final void doRunnerWork() {
+	private final void doConsumerWork() {
 		final long timeToResetMS = this.timeToResetMS;
 
 		/*
 		 * Light Use
 		 */
-		final int indexHostLightUse = this.indexHostLightUse.get();
-		while (indexRunnerLightUse != indexHostLightUse) {
-			doWriteOfLightUse(listHostLightUse[indexRunnerLightUse], timeToResetMS);
+		final int indexProducerLightUse = this.indexProducerLightUse.get();
+		while (indexConsumerLightUse != indexProducerLightUse) {
+			doWriteOfLightUse(listHostLightUse[indexConsumerLightUse], timeToResetMS);
 
-			if (++indexRunnerLightUse >= limitListHostLightUse)
-				indexRunnerLightUse = 0;
+			if (++indexConsumerLightUse >= limitListHostLightUse)
+				indexConsumerLightUse = 0;
 		}
 
 		/*
 		 * Heavy Use
 		 */
-		final int indexHostHeavyUse = this.indexHostHeavyUse.get();
-		while (indexRunnerHeavyUse != indexHostHeavyUse) {
-			doWriteOfHeavyUse(listHostHeavyUse[indexRunnerHeavyUse], timeToResetMS);
+		final int indexProducerHeavyUse = this.indexProducerHeavyUse.get();
+		while (indexConsumerHeavyUse != indexProducerHeavyUse) {
+			doWriteOfHeavyUse(listHostHeavyUse[indexConsumerHeavyUse], timeToResetMS);
 
-			if (++indexRunnerHeavyUse >= limitListHostHeavyUse)
-				indexRunnerHeavyUse = 0;
+			if (++indexConsumerHeavyUse >= limitListHostHeavyUse)
+				indexConsumerHeavyUse = 0;
 		}
 	}
 
@@ -207,14 +216,34 @@ public final class ThreadSystemLoad extends TimerTask {
 		this.intervalToResetMS = intervalToResetMS;
 	}
 
-	public final void addHostLightUse(final String host) {
+	/**
+	 * Asynchronous and Multithreading.
+	 * 
+	 * @param host
+	 */
+	public final void addAllowedHostLightUse(final String host) {
 		// LOG.info(host);
-		listHostLightUse[indexHostLightUse.getAndUpdate(updateFunctionIndexHostLightUse)] = host;
+		listHostLightUse[indexProducerLightUse.getAndUpdate(updateFunctionIndexProducerLightUse)] = host;
 	}
 
-	public final void addHostHeavyUse(final String host) {
+	/**
+	 * Asynchronous and Multithreading.
+	 * 
+	 * @param host
+	 */
+	public final void addAllowedHostHeavyUse(final String host) {
 		// LOG.info(host);
-		listHostHeavyUse[indexHostHeavyUse.getAndUpdate(updateFunctionIndexHostHeavyUse)] = host;
+		listHostHeavyUse[indexProducerHeavyUse.getAndUpdate(updateFunctionIndexProducerHeavyUse)] = host;
+	}
+
+	/**
+	 * Asynchronous and Multithreading.
+	 * 
+	 * @param host
+	 */
+	public final void setDeniedHost(final String host) {
+		// LOG.info(host);
+		mapDeniedHostByOrigin4of4.computeIfAbsent(host, (final String k) -> mapBundleOfUsesByOrigin4of4.get(k));
 	}
 
 	@Override
@@ -222,7 +251,7 @@ public final class ThreadSystemLoad extends TimerTask {
 		try {
 
 			updateTimeToResetMS();
-			doRunnerWork();
+			doConsumerWork();
 
 			freeMemory = runtime.freeMemory();
 
@@ -235,8 +264,7 @@ public final class ThreadSystemLoad extends TimerTask {
 //			info += " | freeMemory: " + String.valueOf(freeMemory);
 //			info += " | systemLoadAverage: " + String.valueOf(systemLoadAverage);
 //			info += " | loadLevel: " + String.valueOf(loadLevel);
-
-//			//LOG.info(info);
+//			LOG.info(info);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -259,27 +287,27 @@ public final class ThreadSystemLoad extends TimerTask {
 		if (bundleOfUses == null)
 			return true;
 
-		// LOG.info(">>>>>>>>> RETURN ALLOWED FROM ORIGINS 1, 2, 3, 4 >>>>>>>>>");
+//		LOG.info(">>>>>>>>> RETURN ALLOWED FROM ORIGINS 1, 2, 3, 4 >>>>>>>>>");
 
 		if (!allowFromOriginX(mapLimitOfUses[3][loadLevel], bundleOfUses.usesOfOrigin4of4))
 			return false;
 
-		// LOG.info("ALLOWED FROM ORIGIN 4of4");
+//		LOG.info("ALLOWED FROM ORIGIN 4of4");
 
 		if (!allowFromOriginX(mapLimitOfUses[2][loadLevel], bundleOfUses.usesOfOrigin3of4))
 			return false;
 
-		// LOG.info("ALLOWED FROM ORIGIN 3of4");
+//		LOG.info("ALLOWED FROM ORIGIN 3of4");
 
 		if (!allowFromOriginX(mapLimitOfUses[1][loadLevel], bundleOfUses.usesOfOrigin2of4))
 			return false;
 
-		// LOG.info("ALLOWED FROM ORIGIN 2of4");
+//		LOG.info("ALLOWED FROM ORIGIN 2of4");
 
 		if (!allowFromOriginX(mapLimitOfUses[0][loadLevel], bundleOfUses.usesOfOrigin1of4))
 			return false;
 
-		// LOG.info("ALLOWED FROM ORIGIN 1of4");
+//		LOG.info("ALLOWED FROM ORIGIN 1of4");
 
 		return true;
 	}
