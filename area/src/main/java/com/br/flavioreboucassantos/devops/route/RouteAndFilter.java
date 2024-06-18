@@ -23,7 +23,10 @@ import jakarta.ws.rs.core.Response;
  * @author Flávio Rebouças Santos - flavioReboucasSantos@gmail.com
  */
 @ApplicationScoped
-public final class RouteAndFilter {
+public final class RouteAndFilter extends ThreadSystemLoad {
+
+	static private final long intervalToResetMS = 10 * 1000;
+	static private final long intervalToThreadSystemLoadMS = 1 * 1000;
 
 	static public final int weightHeavyUse = 5; // Light Use is 1
 
@@ -32,31 +35,27 @@ public final class RouteAndFilter {
 	/*
 	 * Filter
 	 */
-	private ThreadSystemLoad threadSystemLoad;
 	private Timer timerThreadSystemLoad;
-
-	private final long intervalToThreadSystemLoadMS = 1 * 1000;
-	private final long intervalToResetMS = 10 * 1000;
 
 	private final int[][] mapLimitOfUsesByOriginByLoadLevel = {
 			// [0][] = Origin 1 of 4
 			{
-					-1, // [0][0] Load Level 0
+					70000, // [0][0] Load Level 0
 					35 // [0][1] Load Level 1
 			},
 			// [1][] = Origin 2 of 4
 			{
-					-1, // [1][0] Load Level 0
+					7000, // [1][0] Load Level 0
 					35 // [1][1] Load Level 1
 			},
 			// [2][] = Origin 3 of 4
 			{
-					-1, // [2][0] Load Level 0
+					700, // [2][0] Load Level 0
 					35 // [2][1] Load Level 1
 			},
 			// [3][] = Origin 4 of 4
 			{
-					-1, // [3][0] Load Level 0
+					70, // [3][0] Load Level 0
 					35 // [3][1] Load Level 1
 			},
 	};
@@ -71,18 +70,7 @@ public final class RouteAndFilter {
 	private final InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(pathFile);
 	private final String fileContent;
 
-//	System.out.println(x);
-	private final void addAllowedHostLightUse(final String host) {
-		threadSystemLoad.addAllowedHostLightUse(host);
-	}
-
-	private final void addAllowedHostHeavyUse(final String host) {
-		threadSystemLoad.addAllowedHostHeavyUse(host);
-	}
-
-	private final void setDeniedHost(final String host) {
-		threadSystemLoad.setDeniedHost(host);
-	}
+//	System.out.println(x);	
 
 	private final void walkForAddHost(int[] test1of, int[] test2of, int[] test3of, int[] test4of) {
 		for (int i1of = test1of[0]; i1of <= test1of[0] + test1of[1]; i1of++) {
@@ -118,7 +106,7 @@ public final class RouteAndFilter {
 			forAddHost(7, 127, 0, 0, 1); // major (35 | 35 | 35 | 35) = imply DENY from 4of4
 			break;
 		default:
-			forAddHost(1, 127, 0, 0, 1); // validation
+			forAddHost(1, 127, 0, 0, 1); // validate found: nothing allowed.
 			break;
 		}
 	}
@@ -138,7 +126,7 @@ public final class RouteAndFilter {
 			forAddHost(1, 127, 0, 0, 255); // major (35 | 35 | 35 | 30) = imply DENY from 3of4
 			break;
 		default:
-			forAddHost(1, 127, 0, 0, 255); // validation
+			forAddHost(1, 127, 0, 0, 255); // validate found: ALLOWED FROM ORIGIN 4of4
 			break;
 		}
 	}
@@ -159,7 +147,7 @@ public final class RouteAndFilter {
 			forAddHost(1, 127, 0, 255, 255); // major (35 | 35 | 30 | 25) = imply DENY from 2of4
 			break;
 		default:
-			forAddHost(1, 127, 0, 0, 1); // validation
+			forAddHost(1, 127, 0, 0, 1); // validate found: ALLOWED FROM ORIGIN 3of4
 			break;
 		}
 	}
@@ -181,7 +169,7 @@ public final class RouteAndFilter {
 			forAddHost(1, 127, 255, 255, 255); // major (35 | 30 | 25 | 20) = imply DENY from 1of4
 			break;
 		default:
-			forAddHost(1, 127, 0, 0, 1); // validation
+			forAddHost(1, 127, 0, 0, 1); // validate found: ALLOWED FROM ORIGIN 2of4
 			break;
 		}
 	}
@@ -189,7 +177,7 @@ public final class RouteAndFilter {
 	private final void filterLight(final RoutingContext rc, final int[][] mapLimitOfUsesByOriginByLoadLevel) {
 		final String host = rc.request().remoteAddress().host();
 
-		if (threadSystemLoad.allowUseFromOrigins1234(host, mapLimitOfUsesByOriginByLoadLevel)) {
+		if (allowUseFromOrigins1234(host, mapLimitOfUsesByOriginByLoadLevel)) {
 			addAllowedHostLightUse(host);
 
 			rc.next();
@@ -205,7 +193,7 @@ public final class RouteAndFilter {
 	private final void filterHeavy(final RoutingContext rc, final int[][] mapLimitOfUsesByOriginByLoadLevel) {
 		final String host = rc.request().remoteAddress().host();
 
-		if (threadSystemLoad.allowUseFromOrigins1234(host, mapLimitOfUsesByOriginByLoadLevel)) {
+		if (allowUseFromOrigins1234(host, mapLimitOfUsesByOriginByLoadLevel)) {
 //			simulationMassiveRequest_1();
 //			simulationMassiveRequest_2();
 //			simulationMassiveRequest_3();
@@ -224,18 +212,22 @@ public final class RouteAndFilter {
 	}
 
 	/*
-	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
 	 */
 
 	public RouteAndFilter() throws IOException {
+		super(intervalToResetMS);
 		fileContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
 	public final void onStart(@Observes StartupEvent ev) {
 		// (!) The Live Reload will not destroy this thread.
-		threadSystemLoad = new ThreadSystemLoad(intervalToResetMS);
 		timerThreadSystemLoad = new Timer();
-		timerThreadSystemLoad.schedule(threadSystemLoad, intervalToThreadSystemLoadMS, intervalToThreadSystemLoadMS);
+		timerThreadSystemLoad.schedule(this, intervalToThreadSystemLoadMS, intervalToThreadSystemLoadMS);
 	}
 
 	public final void onStop(@Observes ShutdownEvent ev) {

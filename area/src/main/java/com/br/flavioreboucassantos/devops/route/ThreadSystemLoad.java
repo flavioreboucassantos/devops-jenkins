@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Flávio Rebouças Santos - flavioReboucasSantos@gmail.com
  */
-public final class ThreadSystemLoad extends TimerTask {
+public abstract class ThreadSystemLoad extends TimerTask {
 
 	private final Logger LOG = LoggerFactory.getLogger(ThreadSystemLoad.class);
 
@@ -62,8 +62,19 @@ public final class ThreadSystemLoad extends TimerTask {
 		}
 	}
 
-	private final boolean allowFromOriginX(final int limitOfUsesOfOrigin, final UsesOfOrigin usesOfOrigin) {
-		return limitOfUsesOfOrigin < 0 || usesOfOrigin.getUses() < limitOfUsesOfOrigin;
+	private final void updateSystemInformation() {
+		freeMemory = runtime.freeMemory();
+
+		systemLoadAverage = operatingSystemMXBean.getSystemLoadAverage();
+		setLoadLevel(systemLoadAverage);
+
+//		String info = "";
+//		info += "maxMemory: " + String.valueOf(maxMemory);
+//		info += " | totalMemory: " + String.valueOf(totalMemory);
+//		info += " | freeMemory: " + String.valueOf(freeMemory);
+//		info += " | systemLoadAverage: " + String.valueOf(systemLoadAverage);
+//		info += " | loadLevel: " + String.valueOf(loadLevel);
+//		LOG.info(info);
 	}
 
 	private final void updateTimeToResetOfDeniedHost(final long timeToResetMS) {
@@ -95,6 +106,10 @@ public final class ThreadSystemLoad extends TimerTask {
 		}
 	}
 
+	/*
+	 * prepareAndGet...
+	 */
+
 	private final UsesOfOrigin prepareAndGetItem(final UsesOfOrigin[] map, final int origin) {
 		if (map[origin] == null) {
 			final UsesOfOrigin newItem = new UsesOfOrigin();
@@ -123,7 +138,7 @@ public final class ThreadSystemLoad extends TimerTask {
 	}
 
 	/*
-	 * 
+	 * getUsesOfOrigin
 	 */
 
 	private final UsesOfOrigin getUsesOfOrigin(final int origin1of4) {
@@ -212,16 +227,20 @@ public final class ThreadSystemLoad extends TimerTask {
 		}
 	}
 
-	public ThreadSystemLoad(final long intervalToResetMS) {
-		this.intervalToResetMS = intervalToResetMS;
-	}
+	/*
+	 * PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED
+	 * PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED
+	 * PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED
+	 * PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED
+	 * PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED PROTECTED
+	 */
 
 	/**
 	 * Asynchronous and Multithreading.
 	 * 
 	 * @param host
 	 */
-	public final void addAllowedHostLightUse(final String host) {
+	protected final void addAllowedHostLightUse(final String host) {
 		// LOG.info(host);
 		listHostLightUse[indexProducerLightUse.getAndUpdate(updateFunctionIndexProducerLightUse)] = host;
 	}
@@ -231,7 +250,7 @@ public final class ThreadSystemLoad extends TimerTask {
 	 * 
 	 * @param host
 	 */
-	public final void addAllowedHostHeavyUse(final String host) {
+	protected final void addAllowedHostHeavyUse(final String host) {
 		// LOG.info(host);
 		listHostHeavyUse[indexProducerHeavyUse.getAndUpdate(updateFunctionIndexProducerHeavyUse)] = host;
 	}
@@ -241,34 +260,9 @@ public final class ThreadSystemLoad extends TimerTask {
 	 * 
 	 * @param host
 	 */
-	public final void setDeniedHost(final String host) {
+	protected final void setDeniedHost(final String host) {
 		// LOG.info(host);
 		mapDeniedHostByOrigin4of4.computeIfAbsent(host, (final String k) -> mapBundleOfUsesByOrigin4of4.get(k));
-	}
-
-	@Override
-	public void run() {
-		try {
-
-			updateTimeToResetMS();
-			doConsumerWork();
-
-			freeMemory = runtime.freeMemory();
-
-			systemLoadAverage = operatingSystemMXBean.getSystemLoadAverage();
-			setLoadLevel(systemLoadAverage);
-
-//			String info = "";
-//			info += "maxMemory: " + String.valueOf(maxMemory);
-//			info += " | totalMemory: " + String.valueOf(totalMemory);
-//			info += " | freeMemory: " + String.valueOf(freeMemory);
-//			info += " | systemLoadAverage: " + String.valueOf(systemLoadAverage);
-//			info += " | loadLevel: " + String.valueOf(loadLevel);
-//			LOG.info(info);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	/**
@@ -278,37 +272,62 @@ public final class ThreadSystemLoad extends TimerTask {
 	 * @param mapLimitOfUses
 	 * @return
 	 */
-	public final boolean allowUseFromOrigins1234(final String host, final int[][] mapLimitOfUses) {
-		final int loadLevel = this.loadLevel;
-		if (loadLevel == 0) // policy
-			return true;
-
+	protected final boolean allowUseFromOrigins1234(final String host, final int[][] mapLimitOfUses) {
 		final BundleOfUses bundleOfUses = mapBundleOfUsesByOrigin4of4.get(host);
 		if (bundleOfUses == null)
 			return true;
 
+		final int loadLevel = this.loadLevel;
+
 //		LOG.info(">>>>>>>>> RETURN ALLOWED FROM ORIGINS 1, 2, 3, 4 >>>>>>>>>");
 
-		if (!allowFromOriginX(mapLimitOfUses[3][loadLevel], bundleOfUses.usesOfOrigin4of4))
+		if (bundleOfUses.usesOfOrigin4of4.getUses() >= mapLimitOfUses[3][loadLevel])
 			return false;
 
 //		LOG.info("ALLOWED FROM ORIGIN 4of4");
 
-		if (!allowFromOriginX(mapLimitOfUses[2][loadLevel], bundleOfUses.usesOfOrigin3of4))
+		if (bundleOfUses.usesOfOrigin3of4.getUses() >= mapLimitOfUses[2][loadLevel])
 			return false;
 
 //		LOG.info("ALLOWED FROM ORIGIN 3of4");
 
-		if (!allowFromOriginX(mapLimitOfUses[1][loadLevel], bundleOfUses.usesOfOrigin2of4))
+		if (bundleOfUses.usesOfOrigin2of4.getUses() >= mapLimitOfUses[1][loadLevel])
 			return false;
 
 //		LOG.info("ALLOWED FROM ORIGIN 2of4");
 
-		if (!allowFromOriginX(mapLimitOfUses[0][loadLevel], bundleOfUses.usesOfOrigin1of4))
+		if (bundleOfUses.usesOfOrigin1of4.getUses() >= mapLimitOfUses[0][loadLevel])
 			return false;
 
 //		LOG.info("ALLOWED FROM ORIGIN 1of4");
 
 		return true;
+	}
+
+	/*
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 * PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC PUBLIC
+	 */
+
+	public ThreadSystemLoad(final long intervalToResetMS) {
+		this.intervalToResetMS = intervalToResetMS;
+		updateSystemInformation();
+
+	}
+
+	@Override
+	public void run() {
+		try {
+
+			updateTimeToResetMS();
+			doConsumerWork();
+			updateSystemInformation();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
